@@ -38,6 +38,10 @@ export const api = {
   syncCamper: (id) => request('POST', `/campers/${id}/sync`),
   getReadings: (id, hours = 24) => request('GET', `/campers/${id}/readings?hours=${hours}`),
 
+  getEvents: (id, hours = 24) => request('GET', `/campers/${id}/events?hours=${hours}`),
+  addEvent: (id, data) => request('POST', `/campers/${id}/events`, data),
+  deleteEvent: (camperId, eventId) => request('DELETE', `/campers/${camperId}/events/${eventId}`),
+
   getAlerts: () => request('GET', '/alerts'),
   acknowledgeAlert: (id) => request('POST', `/alerts/${id}/acknowledge`),
 

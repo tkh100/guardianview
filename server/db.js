@@ -61,6 +61,18 @@ db.exec(`
   );
 
   CREATE INDEX IF NOT EXISTS idx_alerts_camper ON alerts(camper_id, acknowledged_at);
+
+  CREATE TABLE IF NOT EXISTS camper_events (
+    id INTEGER PRIMARY KEY,
+    camper_id INTEGER NOT NULL REFERENCES campers(id) ON DELETE CASCADE,
+    carbs_g INTEGER,
+    insulin_units REAL,
+    note TEXT,
+    created_by INTEGER REFERENCES app_users(id),
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_events_camper ON camper_events(camper_id, created_at DESC);
 `);
 
 module.exports = db;
