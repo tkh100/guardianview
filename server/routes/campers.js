@@ -88,7 +88,8 @@ router.post('/:id/connect', ...requireRole('admin', 'nurse'), async (req, res) =
   const id = req.params.id;
 
   try {
-    // Test connection before saving
+    // Test connection before saving; capture session where possible to avoid re-auth on first sync
+    let sessionId = null;
     switch (cgm_provider) {
       case 'dexcom':
         if (cgm_auth_mode === 'follower') {
@@ -97,7 +98,8 @@ router.post('/:id/connect', ...requireRole('admin', 'nurse'), async (req, res) =
             return res.status(400).json({ error: 'Follower credentials not configured on server. Add DEXCOM_FOLLOWER_USERNAME and DEXCOM_FOLLOWER_PASSWORD to env.' });
           }
         } else {
-          await dexcom.loginPublisher(cgm_username, cgm_password);
+          // Save the session so the sync engine doesn't need to login again
+          sessionId = await dexcom.loginPublisher(cgm_username, cgm_password);
         }
         break;
       case 'nightscout':
@@ -110,14 +112,14 @@ router.post('/:id/connect', ...requireRole('admin', 'nurse'), async (req, res) =
         return res.status(400).json({ error: 'Unknown CGM provider' });
     }
 
-    // Save
+    // Save credentials and the session ID captured above
     const enc = cgm_auth_mode === 'follower' ? null : encrypt(cgm_password);
     db.prepare(`
       UPDATE campers SET
         cgm_provider=?, cgm_auth_mode=?, cgm_username=?,
-        cgm_password_enc=?, cgm_url=?, cgm_session_id=NULL, sync_error=NULL
+        cgm_password_enc=?, cgm_url=?, cgm_session_id=?, sync_error=NULL
       WHERE id=?
-    `).run(cgm_provider, cgm_auth_mode || 'publisher', cgm_username || null, enc, cgm_url || null, id);
+    `).run(cgm_provider, cgm_auth_mode || 'publisher', cgm_username || null, enc, cgm_url || null, sessionId, id);
 
     res.json({ ok: true, message: 'Connection verified and saved' });
   } catch (err) {
