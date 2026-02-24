@@ -14,19 +14,16 @@ const SYNC_INTERVAL_MS = 60_000;
 const NO_DATA_ALERT_MINUTES = 15;
 
 // Follower session cache (shared across all follower-mode campers)
+// Only re-auth on actual SessionExpiredError — no arbitrary timer
 let followerSession = null;
-let followerSessionExpires = null;
 
 async function getFollowerSession() {
-  if (followerSession && followerSessionExpires > Date.now()) {
-    return followerSession;
-  }
+  if (followerSession) return followerSession;
   const { DEXCOM_FOLLOWER_USERNAME, DEXCOM_FOLLOWER_PASSWORD } = process.env;
   if (!DEXCOM_FOLLOWER_USERNAME || !DEXCOM_FOLLOWER_PASSWORD) {
     throw new Error('Follower credentials not configured in env');
   }
   followerSession = await dexcom.loginFollower(DEXCOM_FOLLOWER_USERNAME, DEXCOM_FOLLOWER_PASSWORD);
-  followerSessionExpires = Date.now() + 5.5 * 60 * 60 * 1000; // 5.5 hours
   return followerSession;
 }
 
@@ -38,23 +35,25 @@ async function syncCamper(camper) {
       case 'dexcom': {
         if (camper.cgm_auth_mode === 'follower') {
           const session = await getFollowerSession();
-          readings = await dexcom.getFollowerReadings(session);
+          try {
+            readings = await dexcom.getFollowerReadings(session);
+          } catch (e) {
+            if (e.name === 'SessionExpiredError') followerSession = null;
+            throw e;
+          }
         } else {
-          // Publisher mode — manage per-camper session
+          // Publisher mode — authenticate once, re-auth only on SessionExpiredError
           let sessionId = camper.cgm_session_id;
-          const expired = !sessionId || (camper.session_expires_at && new Date(camper.session_expires_at) < new Date());
-          if (expired) {
+          if (!sessionId) {
             const password = decrypt(camper.cgm_password_enc);
             sessionId = await dexcom.loginPublisher(camper.cgm_username, password);
-            const expiresAt = new Date(Date.now() + 5.5 * 60 * 60 * 1000).toISOString();
-            db.prepare('UPDATE campers SET cgm_session_id=?, session_expires_at=? WHERE id=?')
-              .run(sessionId, expiresAt, camper.id);
+            db.prepare('UPDATE campers SET cgm_session_id=? WHERE id=?').run(sessionId, camper.id);
           }
           try {
             readings = await dexcom.getPublisherReadings(sessionId);
           } catch (e) {
             if (e.name === 'SessionExpiredError') {
-              // Force re-auth next cycle
+              // Session rejected by Dexcom — clear and re-auth next cycle
               db.prepare('UPDATE campers SET cgm_session_id=NULL WHERE id=?').run(camper.id);
             }
             throw e;
