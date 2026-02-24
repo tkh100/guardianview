@@ -3,6 +3,7 @@ import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import CamperDetail from './pages/CamperDetail';
 import Manage from './pages/Manage';
+import Staff from './pages/Staff';
 import Layout from './components/Layout';
 
 function PrivateRoute({ children }) {
@@ -20,6 +21,7 @@ export default function App() {
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="campers/:id" element={<CamperDetail />} />
           <Route path="manage" element={<Manage />} />
+          <Route path="staff" element={<Staff />} />
         </Route>
       </Routes>
     </BrowserRouter>

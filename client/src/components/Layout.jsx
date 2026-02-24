@@ -1,5 +1,5 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Users, LogOut, Shield } from 'lucide-react';
+import { LayoutDashboard, Users, LogOut, Shield, UserCog } from 'lucide-react';
 
 function getUser() {
   try { return JSON.parse(localStorage.getItem('gv_user') || 'null'); } catch { return null; }
@@ -22,10 +22,15 @@ export default function Layout() {
         : 'text-slate-300 hover:bg-slate-700 hover:text-white'
     }`;
 
+  const mobileNavClass = ({ isActive }) =>
+    `flex-1 flex flex-col items-center gap-0.5 py-3 text-xs font-medium transition-colors ${
+      isActive ? 'text-blue-400' : 'text-slate-400'
+    }`;
+
   return (
     <div className="flex h-screen overflow-hidden">
-      {/* Sidebar */}
-      <aside className="w-56 bg-slate-900 flex flex-col shrink-0">
+      {/* Sidebar — desktop only */}
+      <aside className="hidden md:flex w-56 bg-slate-900 flex-col shrink-0">
         <div className="px-4 py-5 border-b border-slate-700">
           <div className="flex items-center gap-2">
             <Shield className="text-blue-400 w-6 h-6" />
@@ -45,6 +50,11 @@ export default function Layout() {
               <Users size={16} /> Manage Campers
             </NavLink>
           )}
+          {user?.role === 'admin' && (
+            <NavLink to="/staff" className={navClass}>
+              <UserCog size={16} /> Staff Accounts
+            </NavLink>
+          )}
         </nav>
 
         <div className="px-3 py-4 border-t border-slate-700">
@@ -58,9 +68,36 @@ export default function Layout() {
       </aside>
 
       {/* Main content */}
-      <main className="flex-1 overflow-auto">
+      <main className="flex-1 overflow-auto pb-16 md:pb-0">
         <Outlet />
       </main>
+
+      {/* Bottom tab bar — mobile only */}
+      <nav className="flex md:hidden fixed bottom-0 inset-x-0 z-50 bg-slate-900 border-t border-slate-700">
+        <NavLink to="/dashboard" className={mobileNavClass}>
+          <LayoutDashboard size={22} />
+          <span>Dashboard</span>
+        </NavLink>
+        {(user?.role === 'admin' || user?.role === 'nurse') && (
+          <NavLink to="/manage" className={mobileNavClass}>
+            <Users size={22} />
+            <span>Manage</span>
+          </NavLink>
+        )}
+        {user?.role === 'admin' && (
+          <NavLink to="/staff" className={mobileNavClass}>
+            <UserCog size={22} />
+            <span>Staff</span>
+          </NavLink>
+        )}
+        <button
+          onClick={logout}
+          className="flex-1 flex flex-col items-center gap-0.5 py-3 text-xs text-slate-400"
+        >
+          <LogOut size={22} />
+          <span>Sign out</span>
+        </button>
+      </nav>
     </div>
   );
 }

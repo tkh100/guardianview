@@ -42,6 +42,11 @@ export const api = {
   addEvent: (id, data) => request('POST', `/campers/${id}/events`, data),
   deleteEvent: (camperId, eventId) => request('DELETE', `/campers/${camperId}/events/${eventId}`),
 
+  getUsers: () => request('GET', '/users'),
+  addUser: (data) => request('POST', '/users', data),
+  resetPassword: (id, password) => request('PUT', `/users/${id}/password`, { password }),
+  deleteUser: (id) => request('DELETE', `/users/${id}`),
+
   getAlerts: () => request('GET', '/alerts'),
   acknowledgeAlert: (id) => request('POST', `/alerts/${id}/acknowledge`),
 

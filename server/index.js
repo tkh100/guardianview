@@ -16,6 +16,7 @@ if (process.env.NODE_ENV !== 'production') {
 
 // Routes
 app.use('/api/auth', require('./routes/auth'));
+app.use('/api/users', require('./routes/users'));
 app.use('/api/campers', require('./routes/campers'));
 app.use('/api/campers/:id/events', require('./routes/events'));
 app.use('/api/alerts', require('./routes/alerts'));
