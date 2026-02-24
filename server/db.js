@@ -75,4 +75,7 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_events_camper ON camper_events(camper_id, created_at DESC);
 `);
 
+// Migrations for columns added after initial deploy
+try { db.exec('ALTER TABLE campers ADD COLUMN carb_ratio REAL'); } catch {}
+
 module.exports = db;

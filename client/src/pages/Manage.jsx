@@ -6,7 +6,7 @@ const PROVIDERS = ['dexcom', 'nightscout', 'libre'];
 const AUTH_MODES = { dexcom: ['publisher', 'follower'], nightscout: ['publisher'], libre: ['publisher'] };
 
 function AddCamperForm({ onAdd }) {
-  const [form, setForm] = useState({ name: '', cabin_group: '', target_low: 70, target_high: 180 });
+  const [form, setForm] = useState({ name: '', cabin_group: '', target_low: 70, target_high: 180, carb_ratio: '' });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -17,7 +17,7 @@ function AddCamperForm({ onAdd }) {
     try {
       const camper = await api.addCamper(form);
       onAdd(camper);
-      setForm({ name: '', cabin_group: '', target_low: 70, target_high: 180 });
+      setForm({ name: '', cabin_group: '', target_low: 70, target_high: 180, carb_ratio: '' });
     } catch (err) {
       setError(err.message);
     } finally {
@@ -54,6 +54,13 @@ function AddCamperForm({ onAdd }) {
           <label className="block text-xs text-slate-500 mb-1">Target High (mg/dL)</label>
           <input type="number" value={form.target_high} min={150} max={300}
             onChange={e => setForm(f => ({ ...f, target_high: parseInt(e.target.value) }))}
+            className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        </div>
+        <div className="col-span-2">
+          <label className="block text-xs text-slate-500 mb-1">Carb Ratio (g per unit) <span className="text-slate-400">— e.g. 15 means 1u per 15g carbs</span></label>
+          <input type="number" value={form.carb_ratio} min={1} max={100} step={1}
+            onChange={e => setForm(f => ({ ...f, carb_ratio: e.target.value }))}
+            placeholder="e.g. 15"
             className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
         </div>
       </div>
@@ -178,7 +185,7 @@ function CamperRow({ camper, onUpdate, onDelete }) {
   const [editing, setEditing] = useState(false);
   const [connecting, setConnecting] = useState(false);
   const [syncing, setSyncing] = useState(false);
-  const [form, setForm] = useState({ name: camper.name, cabin_group: camper.cabin_group || '', target_low: camper.target_low, target_high: camper.target_high });
+  const [form, setForm] = useState({ name: camper.name, cabin_group: camper.cabin_group || '', target_low: camper.target_low, target_high: camper.target_high, carb_ratio: camper.carb_ratio || '' });
 
   async function saveEdit(e) {
     e.preventDefault();
@@ -220,6 +227,11 @@ function CamperRow({ camper, onUpdate, onDelete }) {
               <input type="number" value={form.target_high} min={150} max={300}
                 onChange={e => setForm(f => ({ ...f, target_high: parseInt(e.target.value) }))}
                 className="border border-slate-200 rounded px-2 py-1 text-sm w-16 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              <input type="number" value={form.carb_ratio} min={1} max={100} step={1}
+                onChange={e => setForm(f => ({ ...f, carb_ratio: e.target.value }))}
+                placeholder="1:? ratio"
+                title="Carb ratio (g per unit)"
+                className="border border-slate-200 rounded px-2 py-1 text-sm w-20 focus:outline-none focus:ring-2 focus:ring-blue-500" />
               <button type="submit" className="text-xs bg-blue-600 text-white px-3 py-1 rounded transition-colors hover:bg-blue-500">Save</button>
               <button type="button" onClick={() => setEditing(false)} className="text-xs text-slate-400 px-2 py-1">Cancel</button>
             </form>
@@ -229,6 +241,7 @@ function CamperRow({ camper, onUpdate, onDelete }) {
               <p className="text-slate-400 text-xs">
                 {camper.cabin_group ? `${camper.cabin_group} · ` : ''}
                 Range: {camper.target_low}–{camper.target_high} mg/dL
+                {camper.carb_ratio && ` · 1:${camper.carb_ratio} ratio`}
                 {camper.cgm_provider && ` · ${camper.cgm_provider}`}
                 {camper.sync_error && <span className="text-rose-400 ml-2">⚠ {camper.sync_error}</span>}
               </p>

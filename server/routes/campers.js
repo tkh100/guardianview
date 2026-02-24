@@ -66,10 +66,10 @@ router.post('/', ...requireRole('admin', 'nurse'), (req, res) => {
 
 // PUT /api/campers/:id — update camper info
 router.put('/:id', ...requireRole('admin', 'nurse'), (req, res) => {
-  const { name, cabin_group, target_low, target_high } = req.body;
+  const { name, cabin_group, target_low, target_high, carb_ratio } = req.body;
   db.prepare(`
-    UPDATE campers SET name=?, cabin_group=?, target_low=?, target_high=? WHERE id=?
-  `).run(name, cabin_group || null, target_low || 70, target_high || 180, req.params.id);
+    UPDATE campers SET name=?, cabin_group=?, target_low=?, target_high=?, carb_ratio=? WHERE id=?
+  `).run(name, cabin_group || null, target_low || 70, target_high || 180, carb_ratio || null, req.params.id);
 
   const camper = db.prepare('SELECT * FROM campers WHERE id=?').get(req.params.id);
   if (!camper) return res.status(404).json({ error: 'Camper not found' });

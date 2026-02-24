@@ -271,10 +271,19 @@ export default function CamperDetail() {
                 min="0"
                 max="999"
                 value={carbs}
-                onChange={e => setCarbs(e.target.value)}
+                onChange={e => {
+                  setCarbs(e.target.value);
+                  if (camper.carb_ratio && e.target.value) {
+                    const suggested = (parseFloat(e.target.value) / camper.carb_ratio).toFixed(1);
+                    setInsulin(suggested);
+                  }
+                }}
                 placeholder="0"
                 className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
+              {camper.carb_ratio && (
+                <p className="text-xs text-slate-400 mt-0.5">1:{camper.carb_ratio} ratio</p>
+              )}
             </div>
             <div>
               <label className="text-xs text-slate-500 mb-1 block">Insulin (units)</label>
