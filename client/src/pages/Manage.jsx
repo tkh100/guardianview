@@ -5,19 +5,46 @@ import { api } from '../api';
 const PROVIDERS = ['dexcom', 'nightscout', 'libre'];
 const AUTH_MODES = { dexcom: ['publisher', 'follower'], nightscout: ['publisher'], libre: ['publisher'] };
 
+const EMPTY_FORM = {
+  name: '', cabin_group: '', target_low: 70, target_high: 180, carb_ratio: '',
+  cgm_provider: 'dexcom', cgm_auth_mode: 'publisher', cgm_username: '', cgm_password: '', cgm_url: '',
+};
+
 function AddCamperForm({ onAdd }) {
-  const [form, setForm] = useState({ name: '', cabin_group: '', target_low: 70, target_high: 180, carb_ratio: '' });
+  const [form, setForm] = useState(EMPTY_FORM);
   const [loading, setLoading] = useState(false);
+  const [status, setStatus] = useState('');
   const [error, setError] = useState('');
+
+  const set = (key, val) => setForm(f => ({ ...f, [key]: val }));
+  const hasCgm = form.cgm_auth_mode === 'follower' || form.cgm_username || form.cgm_password || form.cgm_url;
 
   async function submit(e) {
     e.preventDefault();
     setError('');
+    setStatus('');
     setLoading(true);
     try {
+      setStatus('Adding camper…');
       const camper = await api.addCamper(form);
-      onAdd(camper);
-      setForm({ name: '', cabin_group: '', target_low: 70, target_high: 180, carb_ratio: '' });
+
+      if (hasCgm) {
+        setStatus('Verifying CGM connection…');
+        await api.connectCGM(camper.id, {
+          cgm_provider: form.cgm_provider,
+          cgm_auth_mode: form.cgm_auth_mode,
+          cgm_username: form.cgm_username,
+          cgm_password: form.cgm_password,
+          cgm_url: form.cgm_url,
+        });
+        const updated = await api.getCampers('all');
+        onAdd(updated.find(c => c.id === camper.id) || camper);
+      } else {
+        onAdd(camper);
+      }
+
+      setForm(EMPTY_FORM);
+      setStatus('');
     } catch (err) {
       setError(err.message);
     } finally {
@@ -31,42 +58,102 @@ function AddCamperForm({ onAdd }) {
         <UserPlus size={16} /> Add Camper
       </h2>
       {error && <p className="text-rose-500 text-sm mb-3">{error}</p>}
-      <div className="grid grid-cols-2 gap-3">
+      {status && <p className="text-blue-500 text-sm mb-3">{status}</p>}
+
+      {/* Camper info */}
+      <div className="grid grid-cols-2 gap-3 mb-5">
         <div>
           <label className="block text-xs text-slate-500 mb-1">Full Name *</label>
-          <input required value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
+          <input required value={form.name} onChange={e => set('name', e.target.value)}
             className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             placeholder="Alex Johnson" />
         </div>
         <div>
           <label className="block text-xs text-slate-500 mb-1">Cabin / Group</label>
-          <input value={form.cabin_group} onChange={e => setForm(f => ({ ...f, cabin_group: e.target.value }))}
+          <input value={form.cabin_group} onChange={e => set('cabin_group', e.target.value)}
             className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             placeholder="Cabin 4" />
         </div>
         <div>
           <label className="block text-xs text-slate-500 mb-1">Target Low (mg/dL)</label>
           <input type="number" value={form.target_low} min={50} max={100}
-            onChange={e => setForm(f => ({ ...f, target_low: parseInt(e.target.value) }))}
+            onChange={e => set('target_low', parseInt(e.target.value))}
             className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
         </div>
         <div>
           <label className="block text-xs text-slate-500 mb-1">Target High (mg/dL)</label>
           <input type="number" value={form.target_high} min={150} max={300}
-            onChange={e => setForm(f => ({ ...f, target_high: parseInt(e.target.value) }))}
+            onChange={e => set('target_high', parseInt(e.target.value))}
             className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
         </div>
         <div className="col-span-2">
           <label className="block text-xs text-slate-500 mb-1">Carb Ratio (g per unit) <span className="text-slate-400">— e.g. 15 means 1u per 15g carbs</span></label>
           <input type="number" value={form.carb_ratio} min={1} max={100} step={1}
-            onChange={e => setForm(f => ({ ...f, carb_ratio: e.target.value }))}
+            onChange={e => set('carb_ratio', e.target.value)}
             placeholder="e.g. 15"
             className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
         </div>
       </div>
+
+      {/* CGM connection */}
+      <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3">CGM Connection</p>
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label className="block text-xs text-slate-500 mb-1">CGM Device</label>
+          <select value={form.cgm_provider} onChange={e => set('cgm_provider', e.target.value)}
+            className="w-full border border-slate-200 rounded-lg px-2 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+            {PROVIDERS.map(p => <option key={p} value={p}>{p.charAt(0).toUpperCase() + p.slice(1)}</option>)}
+          </select>
+        </div>
+        {form.cgm_provider === 'dexcom' && (
+          <div>
+            <label className="block text-xs text-slate-500 mb-1">Access Mode</label>
+            <select value={form.cgm_auth_mode} onChange={e => set('cgm_auth_mode', e.target.value)}
+              className="w-full border border-slate-200 rounded-lg px-2 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <option value="publisher">Direct (camper's account)</option>
+              <option value="follower">Follow (camp follows camper)</option>
+            </select>
+          </div>
+        )}
+        {form.cgm_provider === 'nightscout' && (
+          <div className="col-span-2">
+            <label className="block text-xs text-slate-500 mb-1">Nightscout URL</label>
+            <input value={form.cgm_url} onChange={e => set('cgm_url', e.target.value)}
+              placeholder="https://yourcamper.ns.10be.de"
+              className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          </div>
+        )}
+        {form.cgm_auth_mode === 'follower' ? (
+          <div className="col-span-2">
+            <p className="text-xs text-slate-500 bg-blue-50 border border-blue-200 rounded-lg px-3 py-2">
+              Follower mode uses the camp's Dexcom follower account configured in server env vars. The camper's family must add the camp account as a follower in the Dexcom app.
+            </p>
+          </div>
+        ) : (
+          <>
+            {form.cgm_provider !== 'nightscout' && (
+              <div>
+                <label className="block text-xs text-slate-500 mb-1">Username / Email</label>
+                <input value={form.cgm_username} onChange={e => set('cgm_username', e.target.value)}
+                  autoComplete="off"
+                  className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              </div>
+            )}
+            <div>
+              <label className="block text-xs text-slate-500 mb-1">
+                {form.cgm_provider === 'nightscout' ? 'API Secret' : 'Password'}
+              </label>
+              <input type="password" value={form.cgm_password} onChange={e => set('cgm_password', e.target.value)}
+                autoComplete="new-password"
+                className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            </div>
+          </>
+        )}
+      </div>
+
       <button type="submit" disabled={loading}
         className="mt-4 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors">
-        {loading ? 'Adding…' : 'Add Camper'}
+        {loading ? status || 'Saving…' : hasCgm ? 'Add & Connect' : 'Add Camper'}
       </button>
     </form>
   );
