@@ -14,8 +14,12 @@ const TREND_MAP = {
 };
 
 async function getClient(username, password) {
-  // Dynamic import for ESM package
-  const { LibreLinkUpClient } = await import('libre-link-up-api-client');
+  let LibreLinkUpClient;
+  try {
+    ({ LibreLinkUpClient } = await import('libre-link-up-api-client'));
+  } catch {
+    throw new Error('LibreLink support is not yet installed on this server.');
+  }
   const client = new LibreLinkUpClient({ username, password, region: 'us' });
   await client.login();
   return client;
