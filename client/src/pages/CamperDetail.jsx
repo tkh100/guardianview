@@ -7,9 +7,8 @@ import GlucoseChart from '../components/GlucoseChart';
 
 const HOURS = [3, 6, 12, 24];
 const QUICK_CARBS = [
-  { label: '15g NABS', g: 15 },
-  { label: '30g', g: 30 },
-  { label: '45g', g: 45 },
+  { label: 'NABS', g: 15 },
+  { label: 'Tabs', g: 15 },
 ];
 
 function timeAgo(iso) {
@@ -104,10 +103,10 @@ export default function CamperDetail() {
     }
   }
 
-  async function handleQuickCarbs(g) {
+  async function handleQuickCarbs(g, label) {
     setLogging(true);
     try {
-      const event = await api.addEvent(id, { carbs_g: g });
+      const event = await api.addEvent(id, { carbs_g: g, note: label });
       setEvents(prev => [event, ...prev]);
     } finally {
       setLogging(false);
@@ -217,7 +216,7 @@ export default function CamperDetail() {
             ))}
           </div>
         </div>
-        <GlucoseChart readings={readings} targetLow={camper.target_low} targetHigh={camper.target_high} />
+        <GlucoseChart readings={readings} events={events} targetLow={camper.target_low} targetHigh={camper.target_high} />
       </div>
 
       {/* Time in range stats */}
@@ -252,12 +251,12 @@ export default function CamperDetail() {
         <div className="flex gap-2 mb-3">
           {QUICK_CARBS.map(({ label, g }) => (
             <button
-              key={g}
-              onClick={() => handleQuickCarbs(g)}
+              key={label}
+              onClick={() => handleQuickCarbs(g, label)}
               disabled={logging}
               className="flex-1 py-2.5 rounded-lg text-sm font-medium bg-orange-50 text-orange-700 border border-orange-200 hover:bg-orange-100 disabled:opacity-50 transition-colors"
             >
-              {label}
+              {label} · 15g
             </button>
           ))}
         </div>
@@ -283,10 +282,14 @@ export default function CamperDetail() {
                 type="number"
                 min="0"
                 max="99"
-                step="0.5"
+                step="0.1"
                 value={insulin}
                 onChange={e => setInsulin(e.target.value)}
-                placeholder="0"
+                onBlur={e => {
+                  const n = parseFloat(e.target.value);
+                  if (!isNaN(n)) setInsulin(n.toFixed(1));
+                }}
+                placeholder="0.0"
                 className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
