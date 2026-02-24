@@ -75,7 +75,92 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_events_camper ON camper_events(camper_id, created_at DESC);
 `);
 
+// New tables (safe to re-run — IF NOT EXISTS)
+db.exec(`
+  CREATE TABLE IF NOT EXISTS daily_settings (
+    id INTEGER PRIMARY KEY,
+    camper_id INTEGER NOT NULL REFERENCES campers(id) ON DELETE CASCADE,
+    setting_date TEXT NOT NULL,
+    icr REAL,
+    isf REAL,
+    target_bg INTEGER,
+    closed_loop INTEGER,
+    long_acting_am REAL,
+    long_acting_bed REAL,
+    created_by INTEGER REFERENCES app_users(id),
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(camper_id, setting_date)
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_daily_settings_camper ON daily_settings(camper_id, setting_date);
+
+  CREATE TABLE IF NOT EXISTS sheets_sync_state (
+    table_name TEXT PRIMARY KEY,
+    last_synced_id INTEGER DEFAULT 0,
+    last_synced_at DATETIME
+  );
+`);
+
 // Migrations for columns added after initial deploy
-try { db.exec('ALTER TABLE campers ADD COLUMN carb_ratio REAL'); } catch {}
+const migrate = (sql) => { try { db.exec(sql); } catch {} };
+
+// campers — original migration
+migrate('ALTER TABLE campers ADD COLUMN carb_ratio REAL');
+
+// campers — profile fields (both pump and injection)
+migrate('ALTER TABLE campers ADD COLUMN age INTEGER');
+migrate('ALTER TABLE campers ADD COLUMN allergies TEXT');
+migrate("ALTER TABLE campers ADD COLUMN delivery_method TEXT DEFAULT 'pump'");
+migrate('ALTER TABLE campers ADD COLUMN med_breakfast TEXT');
+migrate('ALTER TABLE campers ADD COLUMN med_lunch TEXT');
+migrate('ALTER TABLE campers ADD COLUMN med_dinner TEXT');
+migrate('ALTER TABLE campers ADD COLUMN med_bed TEXT');
+migrate('ALTER TABLE campers ADD COLUMN med_emergency TEXT');
+migrate('ALTER TABLE campers ADD COLUMN a1c REAL');
+migrate('ALTER TABLE campers ADD COLUMN weight REAL');
+migrate('ALTER TABLE campers ADD COLUMN long_acting_type TEXT');
+migrate('ALTER TABLE campers ADD COLUMN short_acting_type TEXT');
+migrate('ALTER TABLE campers ADD COLUMN cgm_pin TEXT');
+migrate('ALTER TABLE campers ADD COLUMN profile_notes TEXT');
+migrate('ALTER TABLE campers ADD COLUMN home_icr REAL');
+migrate('ALTER TABLE campers ADD COLUMN home_isf REAL');
+migrate('ALTER TABLE campers ADD COLUMN home_target_bg INTEGER DEFAULT 150');
+migrate("ALTER TABLE campers ADD COLUMN activity_level TEXT DEFAULT 'moderate'");
+
+// campers — registration review (both)
+migrate('ALTER TABLE campers ADD COLUMN reg_recent_illness TEXT');
+migrate('ALTER TABLE campers ADD COLUMN reg_open_wounds TEXT');
+migrate('ALTER TABLE campers ADD COLUMN reg_scar_tissue TEXT');
+migrate('ALTER TABLE campers ADD COLUMN reg_lice TEXT');
+migrate('ALTER TABLE campers ADD COLUMN reg_meds_received INTEGER DEFAULT 0');
+migrate('ALTER TABLE campers ADD COLUMN reg_cgm_supplies_received INTEGER DEFAULT 0');
+
+// campers — pump-specific
+migrate('ALTER TABLE campers ADD COLUMN pump_pin TEXT');
+migrate('ALTER TABLE campers ADD COLUMN closed_loop INTEGER DEFAULT 0');
+migrate('ALTER TABLE campers ADD COLUMN home_basal_rates TEXT');
+migrate('ALTER TABLE campers ADD COLUMN reg_pump_supplies_received INTEGER DEFAULT 0');
+migrate('ALTER TABLE campers ADD COLUMN pump_site_count INTEGER');
+migrate('ALTER TABLE campers ADD COLUMN pump_reservoir_count INTEGER');
+
+// campers — injection-specific
+migrate('ALTER TABLE campers ADD COLUMN home_long_acting_am REAL');
+migrate('ALTER TABLE campers ADD COLUMN home_long_acting_bed REAL');
+migrate('ALTER TABLE campers ADD COLUMN reg_sensor_count INTEGER');
+migrate('ALTER TABLE campers ADD COLUMN reg_half_unit_syringes INTEGER DEFAULT 0');
+
+// camper_events — expanded flowsheet fields
+migrate('ALTER TABLE camper_events ADD COLUMN bg_manual INTEGER');
+migrate('ALTER TABLE camper_events ADD COLUMN ketones REAL');
+migrate('ALTER TABLE camper_events ADD COLUMN calc_dose REAL');
+migrate('ALTER TABLE camper_events ADD COLUMN dose_given REAL');
+migrate('ALTER TABLE camper_events ADD COLUMN site_change INTEGER DEFAULT 0');
+migrate('ALTER TABLE camper_events ADD COLUMN prebolus INTEGER DEFAULT 0');
+migrate('ALTER TABLE camper_events ADD COLUMN long_acting_given INTEGER DEFAULT 0');
+migrate('ALTER TABLE camper_events ADD COLUMN meal_type TEXT');
+migrate('ALTER TABLE camper_events ADD COLUMN med_slot TEXT');
+
+// app_users — medical access flag
+migrate('ALTER TABLE app_users ADD COLUMN medical_access INTEGER DEFAULT 0');
 
 module.exports = db;

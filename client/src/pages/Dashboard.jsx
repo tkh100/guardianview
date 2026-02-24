@@ -4,6 +4,7 @@ import { api } from '../api';
 import CamperCard from '../components/CamperCard';
 import AlertsPanel from '../components/AlertsPanel';
 import { getGlucoseStatus } from '../components/GlucoseIndicator';
+import { useAudioAlerts } from '../hooks/useAudioAlerts';
 
 function getUser() {
   try { return JSON.parse(localStorage.getItem('gv_user') || 'null'); } catch { return null; }
@@ -11,12 +12,12 @@ function getUser() {
 
 function StatCard({ icon: Icon, label, value, color = 'text-slate-700' }) {
   return (
-    <div className="bg-white rounded-xl border border-slate-200 shadow-sm px-5 py-4">
-      <div className="flex items-center gap-3">
-        <Icon size={18} className="text-slate-400" />
-        <span className="text-slate-500 text-sm">{label}</span>
+    <div className="bg-white rounded-xl border border-slate-200 shadow-sm px-4 py-3 md:px-5 md:py-4">
+      <div className="flex items-center gap-2">
+        <Icon size={16} className="text-slate-400" />
+        <span className="text-slate-500 text-xs md:text-sm">{label}</span>
       </div>
-      <p className={`text-3xl font-bold mt-1 ${color}`}>{value}</p>
+      <p className={`text-2xl md:text-3xl font-bold mt-1 ${color}`}>{value}</p>
     </div>
   );
 }
@@ -47,6 +48,9 @@ export default function Dashboard() {
   }, [groupFilter]);
 
   useEffect(() => { load(); }, [load]);
+
+  // Audio alerts for critical BG
+  useAudioAlerts(alerts);
 
   // Auto-refresh every 60s
   useEffect(() => {
@@ -84,26 +88,26 @@ export default function Dashboard() {
   });
 
   return (
-    <div className="flex h-full">
+    <div className="flex flex-col md:flex-row h-full">
       {/* Main area */}
       <div className="flex-1 overflow-auto">
-        <div className="p-6">
+        <div className="p-4 md:p-6">
           {/* Header */}
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center justify-between mb-4 md:mb-6">
             <div>
-              <h1 className="text-2xl font-bold text-slate-800">Dashboard</h1>
+              <h1 className="text-xl md:text-2xl font-bold text-slate-800">Dashboard</h1>
               <p className="text-slate-500 text-sm">{total} camper{total !== 1 ? 's' : ''} monitored</p>
             </div>
             <button
               onClick={load}
-              className="flex items-center gap-2 text-sm text-slate-500 hover:text-slate-800 transition-colors"
+              className="flex items-center gap-2 text-sm text-slate-500 hover:text-slate-800 transition-colors p-2 -mr-2"
             >
-              <RefreshCw size={15} /> Refresh
+              <RefreshCw size={15} /> <span className="hidden sm:inline">Refresh</span>
             </button>
           </div>
 
           {/* Stats */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-4 md:mb-6">
             <StatCard icon={Users} label="Total" value={total} />
             <StatCard icon={Activity} label="In Range" value={inRange} color="text-emerald-600" />
             <StatCard icon={AlertTriangle} label="Out of Range" value={outOfRange} color="text-amber-600" />
@@ -111,18 +115,18 @@ export default function Dashboard() {
           </div>
 
           {/* Filters */}
-          <div className="flex flex-wrap gap-3 mb-5">
+          <div className="flex flex-wrap gap-2 md:gap-3 mb-4 md:mb-5">
             <input
               type="search"
               placeholder="Search campers…"
               value={search}
               onChange={e => setSearch(e.target.value)}
-              className="border border-slate-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-52"
+              className="border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-full sm:w-52"
             />
             <div className="flex gap-1.5 flex-wrap">
               <button
                 onClick={() => setGroupFilter('all')}
-                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${groupFilter === 'all' ? 'bg-slate-800 text-white' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'}`}
+                className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${groupFilter === 'all' ? 'bg-slate-800 text-white' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'}`}
               >
                 All
               </button>
@@ -130,7 +134,7 @@ export default function Dashboard() {
                 <button
                   key={g}
                   onClick={() => setGroupFilter(g)}
-                  className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${groupFilter === g ? 'bg-slate-800 text-white' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'}`}
+                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${groupFilter === g ? 'bg-slate-800 text-white' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'}`}
                 >
                   {g}
                 </button>
@@ -149,10 +153,18 @@ export default function Dashboard() {
             </div>
           )}
         </div>
+
+        {/* Alerts — mobile: inline below grid */}
+        <div className="md:hidden border-t border-slate-200 p-4">
+          <AlertsPanel
+            alerts={alerts}
+            onAcknowledge={id => setAlerts(prev => prev.filter(a => a.id !== id))}
+          />
+        </div>
       </div>
 
-      {/* Alerts sidebar */}
-      <div className="w-72 shrink-0 border-l border-slate-200 p-4 overflow-auto">
+      {/* Alerts sidebar — desktop only */}
+      <div className="hidden md:block w-72 shrink-0 border-l border-slate-200 p-4 overflow-auto">
         <AlertsPanel
           alerts={alerts}
           onAcknowledge={id => setAlerts(prev => prev.filter(a => a.id !== id))}

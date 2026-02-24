@@ -6,7 +6,7 @@ const router = express.Router({ mergeParams: true });
 
 // GET /api/campers/:id/events?hours=24
 router.get('/', requireAuth, (req, res) => {
-  const hours = Math.min(parseInt(req.query.hours) || 24, 72);
+  const hours = Math.min(parseInt(req.query.hours) || 24, 168);
   const events = db.prepare(`
     SELECT e.*, u.username as created_by_username
     FROM camper_events e
@@ -19,21 +19,45 @@ router.get('/', requireAuth, (req, res) => {
 
 // POST /api/campers/:id/events
 router.post('/', requireAuth, (req, res) => {
-  const { carbs_g, insulin_units, note } = req.body;
+  const {
+    carbs_g, insulin_units, note,
+    bg_manual, ketones, calc_dose, dose_given,
+    site_change, prebolus, long_acting_given,
+    meal_type, med_slot,
+  } = req.body;
 
-  if (!carbs_g && !insulin_units && !note) {
+  const hasData = carbs_g || insulin_units || calc_dose || dose_given ||
+    bg_manual || ketones || note || site_change || prebolus ||
+    long_acting_given || meal_type || med_slot;
+  if (!hasData) {
     return res.status(400).json({ error: 'At least one field required' });
   }
 
+  // Write dose_given to both dose_given and insulin_units for backward compat
+  const effectiveInsulin = dose_given ? parseFloat(dose_given) : (insulin_units ? parseFloat(insulin_units) : null);
+
   const result = db.prepare(`
-    INSERT INTO camper_events (camper_id, carbs_g, insulin_units, note, created_by)
-    VALUES (?, ?, ?, ?, ?)
+    INSERT INTO camper_events (
+      camper_id, carbs_g, insulin_units, note, created_by,
+      bg_manual, ketones, calc_dose, dose_given,
+      site_change, prebolus, long_acting_given,
+      meal_type, med_slot
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).run(
     req.params.id,
     carbs_g ? parseInt(carbs_g) : null,
-    insulin_units ? parseFloat(insulin_units) : null,
+    effectiveInsulin,
     note || null,
     req.user.id,
+    bg_manual ? parseInt(bg_manual) : null,
+    ketones ? parseFloat(ketones) : null,
+    calc_dose ? parseFloat(calc_dose) : null,
+    dose_given ? parseFloat(dose_given) : null,
+    site_change ? 1 : 0,
+    prebolus ? 1 : 0,
+    long_acting_given ? 1 : 0,
+    meal_type || null,
+    med_slot || null,
   );
 
   const event = db.prepare(`

@@ -47,6 +47,11 @@ export const api = {
   resetPassword: (id, password) => request('PUT', `/users/${id}/password`, { password }),
   deleteUser: (id) => request('DELETE', `/users/${id}`),
 
+  getDailySettings: (id) => request('GET', `/campers/${id}/daily-settings`),
+  getDailySettingByDate: (id, date) => request('GET', `/campers/${id}/daily-settings?date=${date}`),
+  getCurrentSettings: (id) => request('GET', `/campers/${id}/daily-settings/current`),
+  upsertDailySettings: (id, date, data) => request('PUT', `/campers/${id}/daily-settings/${date}`, data),
+
   getAlerts: () => request('GET', '/alerts'),
   acknowledgeAlert: (id) => request('POST', `/alerts/${id}/acknowledge`),
 

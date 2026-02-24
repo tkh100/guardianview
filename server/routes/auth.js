@@ -17,13 +17,16 @@ router.post('/login', async (req, res) => {
   const valid = await bcrypt.compare(password, user.password_hash);
   if (!valid) return res.status(401).json({ error: 'Invalid credentials' });
 
+  // Admins and nurses always have medical access
+  const medAccess = (user.role === 'admin' || user.role === 'nurse') ? true : !!user.medical_access;
+
   const token = jwt.sign(
-    { id: user.id, username: user.username, role: user.role, cabin_group: user.cabin_group },
+    { id: user.id, username: user.username, role: user.role, cabin_group: user.cabin_group, medical_access: medAccess },
     process.env.JWT_SECRET,
     { expiresIn: '12h' }
   );
 
-  res.json({ token, user: { id: user.id, username: user.username, role: user.role, cabin_group: user.cabin_group } });
+  res.json({ token, user: { id: user.id, username: user.username, role: user.role, cabin_group: user.cabin_group, medical_access: medAccess } });
 });
 
 module.exports = router;

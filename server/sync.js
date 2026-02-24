@@ -99,10 +99,10 @@ function insertReadings(camperId, readings) {
 }
 
 function pruneOldReadings(camperId) {
-  // Keep only last 24 hours
+  // Keep last 7 days for weekly trend views
   db.prepare(`
     DELETE FROM glucose_readings
-    WHERE camper_id = ? AND reading_time < datetime('now', '-24 hours')
+    WHERE camper_id = ? AND reading_time < datetime('now', '-7 days')
   `).run(camperId);
 }
 

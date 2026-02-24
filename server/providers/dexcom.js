@@ -7,7 +7,7 @@
  */
 const fetch = require('node-fetch');
 
-const BASE_URL = 'https://share1.dexcom.com/ShareWebServices/Services';
+const BASE_URL = 'https://share2.dexcom.com/ShareWebServices/Services';
 const APPLICATION_ID = 'd89443d2-327c-4a6f-89e5-496bbb0317db';
 const HEADERS = {
   'Content-Type': 'application/json',

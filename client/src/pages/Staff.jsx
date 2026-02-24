@@ -20,7 +20,7 @@ export default function Staff() {
   const [loading, setLoading] = useState(true);
 
   // Add form
-  const [form, setForm] = useState({ username: '', password: '', role: 'nurse', cabin_group: '' });
+  const [form, setForm] = useState({ username: '', password: '', role: 'nurse', cabin_group: '', medical_access: false });
   const [adding, setAdding] = useState(false);
   const [addError, setAddError] = useState('');
 
@@ -47,7 +47,7 @@ export default function Staff() {
     try {
       const user = await api.addUser(form);
       setUsers(prev => [...prev, user]);
-      setForm({ username: '', password: '', role: 'nurse', cabin_group: '' });
+      setForm({ username: '', password: '', role: 'nurse', cabin_group: '', medical_access: false });
     } catch (err) {
       setAddError(err.message);
     } finally {
@@ -119,6 +119,16 @@ export default function Staff() {
                 className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
             </div>
           )}
+          {form.role === 'counselor' && (
+            <div className="col-span-2 flex items-center gap-2 mt-1">
+              <input type="checkbox" id="medical_access" checked={form.medical_access}
+                onChange={e => setForm(f => ({ ...f, medical_access: e.target.checked }))}
+                className="rounded" />
+              <label htmlFor="medical_access" className="text-sm text-slate-600">
+                Medical access (nurselor) — can view medication notes
+              </label>
+            </div>
+          )}
         </div>
         <button type="submit" disabled={adding}
           className="mt-4 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors">
@@ -164,6 +174,9 @@ export default function Staff() {
                     <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${ROLE_COLORS[u.role]}`}>
                       {ROLE_LABELS[u.role]}
                     </span>
+                    {u.role === 'counselor' && u.medical_access ? (
+                      <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-teal-100 text-teal-700">Nurselor</span>
+                    ) : null}
                   </div>
                   <div className="flex items-center gap-1 shrink-0">
                     <button onClick={() => { setResetId(u.id); setResetPw(''); setResetError(''); }}

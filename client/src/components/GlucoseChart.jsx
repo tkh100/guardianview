@@ -3,8 +3,14 @@ import {
   ResponsiveContainer, ReferenceLine,
 } from 'recharts';
 
-function formatTime(ts) {
+function formatTimeOnly(ts) {
   return new Date(ts).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+}
+
+function formatDateShort(ts) {
+  const d = new Date(ts);
+  return d.toLocaleDateString([], { weekday: 'short' }) + ' ' +
+    d.toLocaleTimeString([], { hour: 'numeric' });
 }
 
 const CustomTooltip = ({ active, payload }) => {
@@ -12,7 +18,7 @@ const CustomTooltip = ({ active, payload }) => {
   const d = payload[0].payload;
   return (
     <div className="bg-white border border-slate-200 rounded-lg shadow-lg px-3 py-2">
-      <p className="text-slate-500 text-xs">{formatTime(d.ts)}</p>
+      <p className="text-slate-500 text-xs">{formatTimeOnly(d.ts)}</p>
       <p className="text-slate-800 font-bold text-lg">{d.value} <span className="text-xs font-normal text-slate-400">mg/dL</span></p>
     </div>
   );
@@ -31,6 +37,12 @@ export default function GlucoseChart({ readings, events = [], targetLow = 70, ta
     .sort((a, b) => new Date(a.reading_time) - new Date(b.reading_time))
     .map(r => ({ ...r, ts: new Date(r.reading_time).getTime() }));
 
+  // Determine time span for smart X-axis formatting
+  const spanHours = data.length >= 2
+    ? (data[data.length - 1].ts - data[0].ts) / 3_600_000
+    : 0;
+  const tickFormatter = spanHours > 20 ? formatDateShort : formatTimeOnly;
+
   const avgVal = data.reduce((s, r) => s + r.value, 0) / data.length;
   const getColor = (value) => {
     if (value < 55 || value > 300) return '#f43f5e';
@@ -47,7 +59,7 @@ export default function GlucoseChart({ readings, events = [], targetLow = 70, ta
           type="number"
           scale="time"
           domain={['dataMin', 'dataMax']}
-          tickFormatter={formatTime}
+          tickFormatter={tickFormatter}
           tick={{ fontSize: 11, fill: '#94a3b8' }}
           tickLine={false}
           axisLine={false}
@@ -69,11 +81,15 @@ export default function GlucoseChart({ readings, events = [], targetLow = 70, ta
         {/* Event markers */}
         {events.map(e => {
           const x = new Date(e.created_at).getTime();
+          const isMeal = !!e.meal_type;
+          const isMed = !!e.med_slot;
           const isCarbs = e.carbs_g > 0;
-          const color = isCarbs ? '#f97316' : '#3b82f6';
+          const color = isMeal ? '#8b5cf6' : isMed ? '#14b8a6' : isCarbs ? '#f97316' : '#3b82f6';
           const parts = [];
-          if (e.carbs_g) parts.push(`${e.carbs_g}g`);
-          if (e.insulin_units) parts.push(`${e.insulin_units}u`);
+          if (e.meal_type) parts.push(e.meal_type.replace('_', ' '));
+          if (e.med_slot) parts.push('meds');
+          if (e.carbs_g && !isMeal) parts.push(`${e.carbs_g}g`);
+          if (e.dose_given || e.insulin_units) parts.push(`${e.dose_given || e.insulin_units}u`);
           return (
             <ReferenceLine
               key={e.id}
@@ -81,7 +97,7 @@ export default function GlucoseChart({ readings, events = [], targetLow = 70, ta
               stroke={color}
               strokeWidth={1.5}
               strokeDasharray="3 2"
-              label={{ value: parts.join(' / '), position: 'insideTopRight', fontSize: 9, fill: color }}
+              label={parts.length ? { value: parts.join(' / '), position: 'insideTopRight', fontSize: 9, fill: color } : undefined}
             />
           );
         })}

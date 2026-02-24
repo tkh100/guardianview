@@ -19,6 +19,7 @@ app.use('/api/auth', require('./routes/auth'));
 app.use('/api/users', require('./routes/users'));
 app.use('/api/campers', require('./routes/campers'));
 app.use('/api/campers/:id/events', require('./routes/events'));
+app.use('/api/campers/:id/daily-settings', require('./routes/dailySettings'));
 app.use('/api/alerts', require('./routes/alerts'));
 app.use('/api/sync', require('./routes/syncStatus'));
 
@@ -48,4 +49,7 @@ app.listen(PORT, () => {
 
   // Start background sync
   require('./sync').start();
+
+  // Start Google Sheets sync (no-op if env vars not set)
+  require('./sheetsSync').startSheetsSync(db);
 });
