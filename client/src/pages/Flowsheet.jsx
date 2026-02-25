@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {
   ResponsiveContainer, ComposedChart, Line,
-  ReferenceLine, ReferenceArea, XAxis, YAxis,
+  ReferenceLine, ReferenceArea, XAxis, YAxis, Customized,
 } from 'recharts';
 import { ChevronLeft, ChevronRight, CalendarDays } from 'lucide-react';
 import { api } from '../api';
@@ -36,6 +36,52 @@ function fmtTime(ts) {
 
 // ─── MiniChart ───────────────────────────────────────────────────────────────
 
+// Tiny badge overlay (carb pills + manual BG dots) for the mini chart
+function MiniBadges({ xAxisMap, yAxisMap, offset, events = [] }) {
+  const xScale = Object.values(xAxisMap || {})[0]?.scale;
+  const yScale = Object.values(yAxisMap || {})[0]?.scale;
+  if (!xScale || !yScale || !events.length) return null;
+
+  const plotLeft  = offset?.left  ?? 0;
+  const plotTop   = offset?.top   ?? 0;
+  const plotRight = plotLeft + (offset?.width  ?? 0);
+  const plotBot   = plotTop  + (offset?.height ?? 0);
+
+  return (
+    <g>
+      {events.map((e, i) => {
+        const x = xScale(parseTs(e.created_at).getTime());
+        if (x < plotLeft - 10 || x > plotRight + 10) return null;
+        return (
+          <g key={i}>
+            {e.carbs_g > 0 && (
+              <>
+                <rect x={x - 10} y={plotTop + 1} width={20} height={11} rx={2} fill="#f97316" />
+                <text x={x} y={plotTop + 9} textAnchor="middle" fontSize={7} fill="white" fontWeight="700">
+                  {e.carbs_g}g
+                </text>
+              </>
+            )}
+            {e.bg_manual > 0 && (() => {
+              const y = yScale(e.bg_manual);
+              if (y < plotTop || y > plotBot) return null;
+              return (
+                <>
+                  <circle cx={x} cy={y} r={2.5} fill="#f59e0b" stroke="white" strokeWidth={1} />
+                  <rect x={x + 3} y={y - 7} width={22} height={11} rx={2} fill="#fef3c7" stroke="#f59e0b" strokeWidth={0.75} />
+                  <text x={x + 14} y={y + 1.5} textAnchor="middle" fontSize={7} fill="#92400e" fontWeight="700">
+                    {e.bg_manual}
+                  </text>
+                </>
+              );
+            })()}
+          </g>
+        );
+      })}
+    </g>
+  );
+}
+
 function MiniChart({ readings, events, targetLow, targetHigh, date }) {
   if (readings.length === 0) {
     return (
@@ -58,25 +104,25 @@ function MiniChart({ readings, events, targetLow, targetHigh, date }) {
   const hasLow      = values.some(v => v < targetLow);
   const lineColor   = hasCritical ? '#ef4444' : hasLow ? '#f59e0b' : '#22c55e';
 
-  // One vertical marker per event — orange for carbs, blue for insulin
-  const markers = events
-    .filter(e => e.carbs_g > 0 || e.dose_given > 0 || e.long_acting_given > 0)
-    .map(e => ({
-      t: parseTs(e.created_at).getTime(),
-      color: e.carbs_g > 0 ? '#f97316' : '#3b82f6',
-    }));
+  // Vertical markers for insulin-only events (carbs handled by badges)
+  const insulinMarkers = events
+    .filter(e => e.carbs_g === 0 && (e.dose_given > 0 || e.long_acting_given > 0))
+    .map(e => parseTs(e.created_at).getTime());
+
+  const hasBadges = events.some(e => e.carbs_g > 0 || e.bg_manual > 0);
 
   return (
     <ResponsiveContainer width="100%" height={80}>
-      <ComposedChart data={chartData} margin={{ top: 4, right: 2, bottom: 0, left: 2 }}>
+      <ComposedChart data={chartData} margin={{ top: hasBadges ? 14 : 4, right: 2, bottom: 0, left: 2 }}>
         <XAxis dataKey="t" type="number" domain={[dayStart, dayEnd]} hide />
         <YAxis domain={[40, 350]} hide />
         <ReferenceArea y1={targetLow} y2={targetHigh} fill="#22c55e" fillOpacity={0.08} />
         <ReferenceLine y={targetLow}  stroke="#f59e0b" strokeWidth={0.5} strokeDasharray="3 3" />
         <ReferenceLine y={targetHigh} stroke="#f59e0b" strokeWidth={0.5} strokeDasharray="3 3" />
-        {markers.map((m, i) => (
-          <ReferenceLine key={i} x={m.t} stroke={m.color} strokeWidth={1} strokeOpacity={0.6} strokeDasharray="2 2" />
+        {insulinMarkers.map((t, i) => (
+          <ReferenceLine key={i} x={t} stroke="#3b82f6" strokeWidth={1} strokeOpacity={0.6} strokeDasharray="2 2" />
         ))}
+        <Customized component={(props) => <MiniBadges {...props} events={events} />} />
         <Line
           type="monotone"
           dataKey="v"
