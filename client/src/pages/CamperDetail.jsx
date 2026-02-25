@@ -168,6 +168,7 @@ export default function CamperDetail() {
   const [mealType, setMealType] = useState(null);
   const [logging, setLogging] = useState(false);
   const [showMore, setShowMore] = useState(false);
+  const [eventTime, setEventTime] = useState('');
 
   // Daily settings state
   const [dailySettings, setDailySettings] = useState(null);
@@ -306,6 +307,7 @@ export default function CamperDetail() {
         long_acting_given: longActingGiven || false,
         note: note.trim() || null,
         meal_type: mealType || null,
+        event_time: eventTime ? new Date(eventTime).toISOString() : null,
       });
       setEvents(prev => [event, ...prev]);
       resetForm();
@@ -323,7 +325,7 @@ export default function CamperDetail() {
   function resetForm() {
     setBgManual(''); setKetones(''); setCarbs(''); setCalcDose('');
     setDoseGiven(''); setSiteChange(false); setPrebolus(false);
-    setLongActingGiven(false); setNote(''); setMealType(null);
+    setLongActingGiven(false); setNote(''); setMealType(null); setEventTime('');
   }
 
   async function handleDeleteEvent(eventId) {
@@ -620,6 +622,18 @@ export default function CamperDetail() {
                   <input type="number" min="0" max="99" step="0.1" value={calcDose} onChange={e => setCalcDose(e.target.value)}
                     placeholder="0.0" className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
                 </div>
+              </div>
+              <div>
+                <label className="text-xs text-slate-500 mb-1 block">
+                  Time <span className="font-normal text-slate-400">(leave blank for now)</span>
+                </label>
+                <input
+                  type="datetime-local"
+                  value={eventTime}
+                  max={(() => { const n = new Date(); n.setSeconds(0,0); return new Date(n - n.getTimezoneOffset()*60000).toISOString().slice(0,16); })()}
+                  onChange={e => setEventTime(e.target.value)}
+                  className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
               </div>
               <div className="flex flex-wrap gap-4 py-1">
                 <label className="flex items-center gap-1.5 text-sm text-slate-600">
