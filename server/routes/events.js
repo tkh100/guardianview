@@ -23,7 +23,7 @@ router.post('/', requireAuth, (req, res) => {
     carbs_g, insulin_units, note,
     bg_manual, ketones, calc_dose, dose_given,
     site_change, prebolus, long_acting_given,
-    meal_type, med_slot,
+    meal_type, med_slot, event_time,
   } = req.body;
 
   const hasData = carbs_g || insulin_units || calc_dose || dose_given ||
@@ -31,6 +31,17 @@ router.post('/', requireAuth, (req, res) => {
     long_acting_given || meal_type || med_slot;
   if (!hasData) {
     return res.status(400).json({ error: 'At least one field required' });
+  }
+
+  // Validate and resolve optional retroactive timestamp
+  let created_at = null;
+  if (event_time) {
+    const d = new Date(event_time);
+    if (isNaN(d.getTime())) return res.status(400).json({ error: 'Invalid event_time' });
+    if (d.getTime() > Date.now() + 5 * 60 * 1000) {
+      return res.status(400).json({ error: 'event_time cannot be in the future' });
+    }
+    created_at = d.toISOString();
   }
 
   // Write dose_given to both dose_given and insulin_units for backward compat
@@ -41,8 +52,8 @@ router.post('/', requireAuth, (req, res) => {
       camper_id, carbs_g, insulin_units, note, created_by,
       bg_manual, ketones, calc_dose, dose_given,
       site_change, prebolus, long_acting_given,
-      meal_type, med_slot
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      meal_type, med_slot, created_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, COALESCE(?, CURRENT_TIMESTAMP))
   `).run(
     req.params.id,
     carbs_g ? parseInt(carbs_g) : null,
@@ -58,6 +69,7 @@ router.post('/', requireAuth, (req, res) => {
     long_acting_given ? 1 : 0,
     meal_type || null,
     med_slot || null,
+    created_at,
   );
 
   const event = db.prepare(`
