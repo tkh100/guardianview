@@ -107,7 +107,7 @@ function MiniChart({ readings, events, targetLow, targetHigh, date }) {
   // Vertical markers for insulin-only events (carbs handled by badges)
   const insulinMarkers = events
     .filter(e => e.carbs_g === 0 && (e.dose_given > 0 || e.long_acting_given > 0))
-    .map(e => parseTs(e.created_at).getTime());
+    .map(e => ({ t: parseTs(e.created_at).getTime(), dose: e.dose_given || e.long_acting_given }));
 
   const hasBadges = events.some(e => e.carbs_g > 0 || e.bg_manual > 0);
 
@@ -119,8 +119,10 @@ function MiniChart({ readings, events, targetLow, targetHigh, date }) {
         <ReferenceArea y1={targetLow} y2={targetHigh} fill="#22c55e" fillOpacity={0.08} />
         <ReferenceLine y={targetLow}  stroke="#f59e0b" strokeWidth={0.5} strokeDasharray="3 3" />
         <ReferenceLine y={targetHigh} stroke="#f59e0b" strokeWidth={0.5} strokeDasharray="3 3" />
-        {insulinMarkers.map((t, i) => (
-          <ReferenceLine key={i} x={t} stroke="#3b82f6" strokeWidth={1} strokeOpacity={0.6} strokeDasharray="2 2" />
+        {insulinMarkers.map(({ t, dose }, i) => (
+          <ReferenceLine key={i} x={t} stroke="#3b82f6" strokeWidth={1} strokeOpacity={0.6} strokeDasharray="2 2"
+            label={{ value: `${+parseFloat(dose).toFixed(1)}u`, position: 'insideTopRight', fill: '#3b82f6', fontSize: 9, fontWeight: 700 }}
+          />
         ))}
         <Customized component={(props) => <MiniBadges {...props} events={events} />} />
         <Line
