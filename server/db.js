@@ -149,6 +149,10 @@ migrate('ALTER TABLE campers ADD COLUMN home_long_acting_bed REAL');
 migrate('ALTER TABLE campers ADD COLUMN reg_sensor_count INTEGER');
 migrate('ALTER TABLE campers ADD COLUMN reg_half_unit_syringes INTEGER DEFAULT 0');
 
+// Cabin group format: convert old letter-first format (B2, G1) → number-first (2B, 1G)
+migrate(`UPDATE campers SET cabin_group = SUBSTR(cabin_group, 2) || SUBSTR(cabin_group, 1, 1) WHERE LENGTH(cabin_group) >= 2 AND UPPER(SUBSTR(cabin_group, 1, 1)) BETWEEN 'A' AND 'Z' AND CAST(SUBSTR(cabin_group, 2) AS INTEGER) > 0`);
+migrate(`UPDATE app_users SET cabin_group = SUBSTR(cabin_group, 2) || SUBSTR(cabin_group, 1, 1) WHERE LENGTH(cabin_group) >= 2 AND UPPER(SUBSTR(cabin_group, 1, 1)) BETWEEN 'A' AND 'Z' AND CAST(SUBSTR(cabin_group, 2) AS INTEGER) > 0`);
+
 // camper_events — expanded flowsheet fields
 migrate('ALTER TABLE camper_events ADD COLUMN bg_manual INTEGER');
 migrate('ALTER TABLE camper_events ADD COLUMN ketones REAL');
