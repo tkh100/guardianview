@@ -27,7 +27,7 @@ function decrypt(data) {
   const encrypted = buf.slice(28);
   const decipher = crypto.createDecipheriv(ALGORITHM, getKey(), iv);
   decipher.setAuthTag(tag);
-  return decipher.update(encrypted) + decipher.final('utf8');
+  return decipher.update(encrypted, null, 'utf8') + decipher.final('utf8');
 }
 
 module.exports = { encrypt, decrypt };

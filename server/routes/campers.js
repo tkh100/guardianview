@@ -80,93 +80,104 @@ router.post('/', ...requireRole('admin', 'nurse'), (req, res) => {
   const b = req.body;
   if (!b.name) return res.status(400).json({ error: 'Name is required' });
 
-  const result = db.prepare(`
-    INSERT INTO campers (
-      name, cabin_group, target_low, target_high, carb_ratio, delivery_method,
-      age, allergies, med_breakfast, med_lunch, med_dinner, med_bed, med_emergency,
-      a1c, weight, long_acting_type, short_acting_type, cgm_pin, profile_notes,
-      home_icr, home_isf, home_target_bg, activity_level,
-      reg_recent_illness, reg_open_wounds, reg_scar_tissue, reg_lice,
-      reg_meds_received, reg_cgm_supplies_received,
-      pump_pin, closed_loop, home_basal_rates, reg_pump_supplies_received,
-      pump_site_count, pump_reservoir_count,
-      home_long_acting_am, home_long_acting_bed, reg_sensor_count, reg_half_unit_syringes
-    ) VALUES (
-      ?, ?, ?, ?, ?, ?,
-      ?, ?, ?, ?, ?, ?, ?,
-      ?, ?, ?, ?, ?, ?,
-      ?, ?, ?, ?,
-      ?, ?, ?, ?,
-      ?, ?,
-      ?, ?, ?, ?,
-      ?, ?,
-      ?, ?, ?, ?
-    )
-  `).run(
-    b.name, b.cabin_group || null, b.target_low || 70, b.target_high || 180,
-    b.carb_ratio || null, b.delivery_method || 'pump',
-    b.age || null, b.allergies || null,
-    b.med_breakfast || null, b.med_lunch || null, b.med_dinner || null,
-    b.med_bed || null, b.med_emergency || null,
-    b.a1c || null, b.weight || null,
-    b.long_acting_type || null, b.short_acting_type || null,
-    b.cgm_pin || null, b.profile_notes || null,
-    b.home_icr || null, b.home_isf || null, b.home_target_bg || 150,
-    b.activity_level || 'moderate',
-    b.reg_recent_illness || null, b.reg_open_wounds || null,
-    b.reg_scar_tissue || null, b.reg_lice || null,
-    b.reg_meds_received ? 1 : 0, b.reg_cgm_supplies_received ? 1 : 0,
-    b.pump_pin || null, b.closed_loop ? 1 : 0,
-    b.home_basal_rates || null, b.reg_pump_supplies_received ? 1 : 0,
-    b.pump_site_count || null, b.pump_reservoir_count || null,
-    b.home_long_acting_am || null, b.home_long_acting_bed || null,
-    b.reg_sensor_count || null, b.reg_half_unit_syringes ? 1 : 0,
-  );
+  try {
+    const result = db.prepare(`
+      INSERT INTO campers (
+        name, cabin_group, target_low, target_high, carb_ratio, delivery_method,
+        age, allergies, med_breakfast, med_lunch, med_dinner, med_bed, med_emergency,
+        a1c, weight, long_acting_type, short_acting_type, cgm_pin, profile_notes,
+        home_icr, home_isf, home_target_bg, activity_level,
+        reg_recent_illness, reg_open_wounds, reg_scar_tissue, reg_lice,
+        reg_meds_received, reg_cgm_supplies_received,
+        pump_pin, closed_loop, home_basal_rates, reg_pump_supplies_received,
+        pump_site_count, pump_reservoir_count,
+        home_long_acting_am, home_long_acting_bed, reg_sensor_count, reg_half_unit_syringes
+      ) VALUES (
+        ?, ?, ?, ?, ?, ?,
+        ?, ?, ?, ?, ?, ?, ?,
+        ?, ?, ?, ?, ?, ?,
+        ?, ?, ?, ?,
+        ?, ?, ?, ?,
+        ?, ?,
+        ?, ?, ?, ?,
+        ?, ?,
+        ?, ?, ?, ?
+      )
+    `).run(
+      b.name, b.cabin_group || null, b.target_low || 70, b.target_high || 180,
+      b.carb_ratio || null, b.delivery_method || 'pump',
+      b.age || null, b.allergies || null,
+      b.med_breakfast || null, b.med_lunch || null, b.med_dinner || null,
+      b.med_bed || null, b.med_emergency || null,
+      b.a1c || null, b.weight || null,
+      b.long_acting_type || null, b.short_acting_type || null,
+      b.cgm_pin || null, b.profile_notes || null,
+      b.home_icr || null, b.home_isf || null, b.home_target_bg || 150,
+      b.activity_level || 'moderate',
+      b.reg_recent_illness || null, b.reg_open_wounds || null,
+      b.reg_scar_tissue || null, b.reg_lice || null,
+      b.reg_meds_received ? 1 : 0, b.reg_cgm_supplies_received ? 1 : 0,
+      b.pump_pin || null, b.closed_loop ? 1 : 0,
+      b.home_basal_rates || null, b.reg_pump_supplies_received ? 1 : 0,
+      b.pump_site_count || null, b.pump_reservoir_count || null,
+      b.home_long_acting_am || null, b.home_long_acting_bed || null,
+      b.reg_sensor_count || null, b.reg_half_unit_syringes ? 1 : 0,
+    );
 
-  const camper = db.prepare('SELECT * FROM campers WHERE id=?').get(result.lastInsertRowid);
-  res.status(201).json(stripCredentials(camper));
+    const camper = db.prepare('SELECT * FROM campers WHERE id=?').get(result.lastInsertRowid);
+    res.status(201).json(stripCredentials(camper));
+  } catch (err) {
+    console.error('[POST /campers]', err.message);
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // PUT /api/campers/:id — update camper info
 router.put('/:id', ...requireRole('admin', 'nurse'), (req, res) => {
-  const b = req.body;
-  db.prepare(`
-    UPDATE campers SET
-      name=?, cabin_group=?, target_low=?, target_high=?, carb_ratio=?, delivery_method=?,
-      age=?, allergies=?, med_breakfast=?, med_lunch=?, med_dinner=?, med_bed=?, med_emergency=?,
-      a1c=?, weight=?, long_acting_type=?, short_acting_type=?, cgm_pin=?, profile_notes=?,
-      home_icr=?, home_isf=?, home_target_bg=?, activity_level=?,
-      reg_recent_illness=?, reg_open_wounds=?, reg_scar_tissue=?, reg_lice=?,
-      reg_meds_received=?, reg_cgm_supplies_received=?,
-      pump_pin=?, closed_loop=?, home_basal_rates=?, reg_pump_supplies_received=?,
-      pump_site_count=?, pump_reservoir_count=?,
-      home_long_acting_am=?, home_long_acting_bed=?, reg_sensor_count=?, reg_half_unit_syringes=?
-    WHERE id=?
-  `).run(
-    b.name, b.cabin_group || null, b.target_low || 70, b.target_high || 180,
-    b.carb_ratio || null, b.delivery_method || 'pump',
-    b.age || null, b.allergies || null,
-    b.med_breakfast || null, b.med_lunch || null, b.med_dinner || null,
-    b.med_bed || null, b.med_emergency || null,
-    b.a1c || null, b.weight || null,
-    b.long_acting_type || null, b.short_acting_type || null,
-    b.cgm_pin || null, b.profile_notes || null,
-    b.home_icr || null, b.home_isf || null, b.home_target_bg || 150,
-    b.activity_level || 'moderate',
-    b.reg_recent_illness || null, b.reg_open_wounds || null,
-    b.reg_scar_tissue || null, b.reg_lice || null,
-    b.reg_meds_received ? 1 : 0, b.reg_cgm_supplies_received ? 1 : 0,
-    b.pump_pin || null, b.closed_loop ? 1 : 0,
-    b.home_basal_rates || null, b.reg_pump_supplies_received ? 1 : 0,
-    b.pump_site_count || null, b.pump_reservoir_count || null,
-    b.home_long_acting_am || null, b.home_long_acting_bed || null,
-    b.reg_sensor_count || null, b.reg_half_unit_syringes ? 1 : 0,
-    req.params.id,
-  );
+  const existing = db.prepare('SELECT * FROM campers WHERE id=?').get(req.params.id);
+  if (!existing) return res.status(404).json({ error: 'Camper not found' });
+  const b = { ...existing, ...req.body };
+  try {
+    db.prepare(`
+      UPDATE campers SET
+        name=?, cabin_group=?, target_low=?, target_high=?, carb_ratio=?, delivery_method=?,
+        age=?, allergies=?, med_breakfast=?, med_lunch=?, med_dinner=?, med_bed=?, med_emergency=?,
+        a1c=?, weight=?, long_acting_type=?, short_acting_type=?, cgm_pin=?, profile_notes=?,
+        home_icr=?, home_isf=?, home_target_bg=?, activity_level=?,
+        reg_recent_illness=?, reg_open_wounds=?, reg_scar_tissue=?, reg_lice=?,
+        reg_meds_received=?, reg_cgm_supplies_received=?,
+        pump_pin=?, closed_loop=?, home_basal_rates=?, reg_pump_supplies_received=?,
+        pump_site_count=?, pump_reservoir_count=?,
+        home_long_acting_am=?, home_long_acting_bed=?, reg_sensor_count=?, reg_half_unit_syringes=?
+      WHERE id=?
+    `).run(
+      b.name, b.cabin_group || null, b.target_low || 70, b.target_high || 180,
+      b.carb_ratio || null, b.delivery_method || 'pump',
+      b.age || null, b.allergies || null,
+      b.med_breakfast || null, b.med_lunch || null, b.med_dinner || null,
+      b.med_bed || null, b.med_emergency || null,
+      b.a1c || null, b.weight || null,
+      b.long_acting_type || null, b.short_acting_type || null,
+      b.cgm_pin || null, b.profile_notes || null,
+      b.home_icr || null, b.home_isf || null, b.home_target_bg || 150,
+      b.activity_level || 'moderate',
+      b.reg_recent_illness || null, b.reg_open_wounds || null,
+      b.reg_scar_tissue || null, b.reg_lice || null,
+      b.reg_meds_received ? 1 : 0, b.reg_cgm_supplies_received ? 1 : 0,
+      b.pump_pin || null, b.closed_loop ? 1 : 0,
+      b.home_basal_rates || null, b.reg_pump_supplies_received ? 1 : 0,
+      b.pump_site_count || null, b.pump_reservoir_count || null,
+      b.home_long_acting_am || null, b.home_long_acting_bed || null,
+      b.reg_sensor_count || null, b.reg_half_unit_syringes ? 1 : 0,
+      req.params.id,
+    );
 
-  const camper = db.prepare('SELECT * FROM campers WHERE id=?').get(req.params.id);
-  if (!camper) return res.status(404).json({ error: 'Camper not found' });
-  res.json(stripCredentials(camper));
+    const camper = db.prepare('SELECT * FROM campers WHERE id=?').get(req.params.id);
+    res.json(stripCredentials(camper));
+  } catch (err) {
+    console.error('[PUT /campers/:id]', err.message);
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // DELETE /api/campers/:id — deactivate (soft delete)
