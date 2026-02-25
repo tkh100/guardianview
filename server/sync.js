@@ -143,7 +143,7 @@ function checkNoDataAlerts() {
   const threshold = new Date(Date.now() - NO_DATA_ALERT_MINUTES * 60 * 1000).toISOString();
   const stale = db.prepare(`
     SELECT id, target_low, target_high FROM campers
-    WHERE is_active=1 AND cgm_username IS NOT NULL
+    WHERE is_active=1 AND (cgm_username IS NOT NULL OR cgm_url IS NOT NULL)
       AND (last_sync_at IS NULL OR last_sync_at < ?)
   `).all(threshold);
 
@@ -161,7 +161,7 @@ function checkNoDataAlerts() {
 
 async function runSyncCycle() {
   const campers = db.prepare(`
-    SELECT * FROM campers WHERE is_active=1 AND cgm_provider IS NOT NULL AND cgm_username IS NOT NULL
+    SELECT * FROM campers WHERE is_active=1 AND cgm_provider IS NOT NULL AND (cgm_username IS NOT NULL OR cgm_url IS NOT NULL)
   `).all();
 
   for (let i = 0; i < campers.length; i += BATCH_SIZE) {
