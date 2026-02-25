@@ -105,9 +105,12 @@ function MiniChart({ readings, events, targetLow, targetHigh, date }) {
   const lineColor   = hasCritical ? '#ef4444' : hasLow ? '#f59e0b' : '#22c55e';
 
   // Vertical markers for insulin-only events (carbs handled by badges)
-  const insulinMarkers = events
-    .filter(e => e.carbs_g === 0 && (e.dose_given > 0 || e.long_acting_given > 0))
-    .map(e => ({ t: parseTs(e.created_at).getTime(), dose: e.dose_given || e.long_acting_given }));
+  const shortActingMarkers = events
+    .filter(e => e.carbs_g === 0 && e.dose_given > 0)
+    .map(e => ({ t: parseTs(e.created_at).getTime(), dose: e.dose_given }));
+  const longActingMarkers = events
+    .filter(e => e.carbs_g === 0 && e.long_acting_given > 0)
+    .map(e => ({ t: parseTs(e.created_at).getTime(), dose: e.long_acting_given }));
 
   const hasBadges = events.some(e => e.carbs_g > 0 || e.bg_manual > 0);
 
@@ -119,9 +122,14 @@ function MiniChart({ readings, events, targetLow, targetHigh, date }) {
         <ReferenceArea y1={targetLow} y2={targetHigh} fill="#22c55e" fillOpacity={0.08} />
         <ReferenceLine y={targetLow}  stroke="#f59e0b" strokeWidth={0.5} strokeDasharray="3 3" />
         <ReferenceLine y={targetHigh} stroke="#f59e0b" strokeWidth={0.5} strokeDasharray="3 3" />
-        {insulinMarkers.map(({ t, dose }, i) => (
-          <ReferenceLine key={i} x={t} stroke="#3b82f6" strokeWidth={1} strokeOpacity={0.6} strokeDasharray="2 2"
+        {shortActingMarkers.map(({ t, dose }, i) => (
+          <ReferenceLine key={`sa${i}`} x={t} stroke="#3b82f6" strokeWidth={1} strokeOpacity={0.6} strokeDasharray="2 2"
             label={{ value: `${+parseFloat(dose).toFixed(1)}u`, position: 'insideTopRight', fill: '#3b82f6', fontSize: 9, fontWeight: 700 }}
+          />
+        ))}
+        {longActingMarkers.map(({ t, dose }, i) => (
+          <ReferenceLine key={`la${i}`} x={t} stroke="#a855f7" strokeWidth={1} strokeOpacity={0.6} strokeDasharray="4 2"
+            label={{ value: `${+parseFloat(dose).toFixed(1)}uL`, position: 'insideTopRight', fill: '#a855f7', fontSize: 9, fontWeight: 700 }}
           />
         ))}
         <Customized component={(props) => <MiniBadges {...props} events={events} />} />
@@ -209,7 +217,8 @@ function CamperDetailModal({ camper, date, onClose }) {
   const lineColor   = hasCritical ? '#ef4444' : hasLow ? '#f59e0b' : '#22c55e';
 
   const carbMarkers    = events.filter(e => e.carbs_g > 0).map(e => ({ t: parseTs(e.created_at).getTime(), carbs: e.carbs_g }));
-  const insulinMarkers = events.filter(e => e.dose_given > 0 || e.long_acting_given > 0).map(e => ({ t: parseTs(e.created_at).getTime(), dose: e.dose_given || e.long_acting_given }));
+  const shortActingMarkers = events.filter(e => e.dose_given > 0).map(e => ({ t: parseTs(e.created_at).getTime(), dose: e.dose_given }));
+  const longActingMarkers  = events.filter(e => e.long_acting_given > 0).map(e => ({ t: parseTs(e.created_at).getTime(), dose: e.long_acting_given }));
 
   const avg    = values.length ? Math.round(values.reduce((a, b) => a + b, 0) / values.length) : null;
   const inRange = values.filter(v => v >= camper.target_low && v <= camper.target_high).length;
@@ -265,9 +274,14 @@ function CamperDetailModal({ camper, date, onClose }) {
                 {carbMarkers.map(({ t }, i) => (
                   <ReferenceLine key={`c${i}`} x={t} stroke="#f97316" strokeWidth={1.5} strokeOpacity={0.7} />
                 ))}
-                {insulinMarkers.map(({ t, dose }, i) => (
-                  <ReferenceLine key={`ins${i}`} x={t} stroke="#3b82f6" strokeWidth={1.5} strokeOpacity={0.6} strokeDasharray="3 3"
+                {shortActingMarkers.map(({ t, dose }, i) => (
+                  <ReferenceLine key={`sa${i}`} x={t} stroke="#3b82f6" strokeWidth={1.5} strokeOpacity={0.6} strokeDasharray="3 3"
                     label={{ value: `${+parseFloat(dose).toFixed(1)}u`, position: 'insideTopRight', fill: '#3b82f6', fontSize: 10, fontWeight: 700 }}
+                  />
+                ))}
+                {longActingMarkers.map(({ t, dose }, i) => (
+                  <ReferenceLine key={`la${i}`} x={t} stroke="#a855f7" strokeWidth={1.5} strokeOpacity={0.6} strokeDasharray="5 3"
+                    label={{ value: `${+parseFloat(dose).toFixed(1)}uL`, position: 'insideTopRight', fill: '#a855f7', fontSize: 10, fontWeight: 700 }}
                   />
                 ))}
                 <Line type="monotone" dataKey="v" stroke={lineColor} strokeWidth={2} dot={false} isAnimationActive={false} />
