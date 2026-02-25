@@ -212,6 +212,9 @@ export default function Checkin() {
               <input type="number" step="0.5" value={s1.carb_ratio} onChange={f1('carb_ratio')} placeholder="1:?" className={inputCls} />
             </div>
           </div>
+          {!s1.name.trim() && (
+            <p className="text-xs text-slate-400 text-center -mb-1">Enter a name above to continue</p>
+          )}
           <button onClick={handleStep1} disabled={saving || !s1.name.trim()}
             className="w-full py-3 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 disabled:opacity-40 transition-colors mt-2">
             {saving ? 'Saving...' : 'Next: Medical Profile'}
@@ -401,7 +404,8 @@ export default function Checkin() {
             <div>
               <label className={labelCls}>Username / Email</label>
               <input type="text" value={cgmUsername} onChange={e => setCgmUsername(e.target.value)}
-                placeholder={cgmProvider === 'dexcom' ? 'Dexcom username' : 'LibreLinkUp email'} className={inputCls} />
+                placeholder={cgmProvider === 'dexcom' ? 'Dexcom username' : 'LibreLinkUp email'} className={inputCls}
+                autoComplete="off" />
             </div>
           )}
 
@@ -415,14 +419,14 @@ export default function Checkin() {
               <div>
                 <label className={labelCls}>API Secret</label>
                 <input type="password" value={cgmPassword} onChange={e => setCgmPassword(e.target.value)}
-                  placeholder="API secret" className={inputCls} />
+                  placeholder="API secret" className={inputCls} autoComplete="new-password" />
               </div>
             </>
           ) : cgmAuthMode !== 'follower' ? (
             <div>
               <label className={labelCls}>Password</label>
               <input type="password" value={cgmPassword} onChange={e => setCgmPassword(e.target.value)}
-                placeholder="Password" className={inputCls} />
+                placeholder="Password" className={inputCls} autoComplete="new-password" />
             </div>
           ) : (
             <p className="text-sm text-slate-500 bg-slate-50 rounded-lg px-3 py-2 border border-slate-200">

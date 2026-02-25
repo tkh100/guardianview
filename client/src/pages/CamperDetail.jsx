@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, RefreshCw, Wifi, WifiOff, Trash2, Pill, Check, ChevronLeft, ChevronRight } from 'lucide-react';
 import { api } from '../api';
 import GlucoseIndicator, { getGlucoseStatus, STATUS_STYLES } from '../components/GlucoseIndicator';
@@ -139,6 +139,7 @@ function EventRow({ event, onDelete, showDate }) {
 
 export default function CamperDetail() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const user = getCurrentUser();
   const hasMedAccess = user?.medical_access || user?.role === 'admin' || user?.role === 'nurse';
 
@@ -363,9 +364,9 @@ export default function CamperDetail() {
   return (
     <div className="max-w-3xl mx-auto p-4 md:p-6">
       {/* Back */}
-      <Link to="/dashboard" className="inline-flex items-center gap-1 text-slate-500 hover:text-slate-800 text-sm mb-4 md:mb-5 transition-colors py-1">
-        <ArrowLeft size={15} /> Back to Dashboard
-      </Link>
+      <button onClick={() => navigate(-1)} className="inline-flex items-center gap-1 text-slate-500 hover:text-slate-800 text-sm mb-4 md:mb-5 transition-colors py-1">
+        <ArrowLeft size={15} /> Back
+      </button>
 
       {/* Header card */}
       <div className={`rounded-2xl p-4 md:p-6 ring-2 mb-4 md:mb-6 ${styles.bg} ${styles.ring}`}>

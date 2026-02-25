@@ -145,9 +145,9 @@ export default function Trends() {
   const isPump = selectedCamper?.delivery_method === 'pump';
 
   return (
-    <div className="flex flex-col md:flex-row h-full overflow-hidden">
+    <div className="flex flex-col md:flex-row md:h-full md:overflow-hidden">
       {/* Left: Overview list */}
-      <div className="w-full md:w-72 shrink-0 border-b md:border-b-0 md:border-r border-slate-200 overflow-auto">
+      <div className="w-full md:w-72 shrink-0 border-b md:border-b-0 md:border-r border-slate-200 md:overflow-auto">
         <div className="p-4 border-b border-slate-100 flex items-center justify-between">
           <div>
             <h1 className="font-bold text-slate-800">Daily Trends</h1>
@@ -218,7 +218,7 @@ export default function Trends() {
       </div>
 
       {/* Right: Drill-down */}
-      <div className="flex-1 overflow-auto">
+      <div className="flex-1 md:overflow-auto">
         {!selectedCamper ? (
           <div className="flex items-center justify-center h-full text-slate-400">
             <p>Select a camper to view details</p>

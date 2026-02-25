@@ -16,10 +16,15 @@ async function request(method, path, body) {
   });
 
   if (res.status === 401) {
-    localStorage.removeItem('gv_token');
-    localStorage.removeItem('gv_user');
-    window.location.href = '/login';
-    return;
+    // Only auto-redirect if the user had an active session (token expired).
+    // If there's no token, we're on the login page — let the error propagate
+    // so the form can display "Invalid credentials" to the user.
+    if (getToken()) {
+      localStorage.removeItem('gv_token');
+      localStorage.removeItem('gv_user');
+      window.location.href = '/login';
+      return;
+    }
   }
 
   const data = await res.json().catch(() => ({}));
