@@ -3,6 +3,10 @@ import { UserPlus, Trash2, KeyRound } from 'lucide-react';
 import { api } from '../api';
 
 const ROLES = ['nurse', 'counselor', 'admin'];
+const CABIN_GROUPS = [
+  ...Array.from({ length: 10 }, (_, i) => `B${(i + 1) * 2}`),
+  ...Array.from({ length: 13 }, (_, i) => `G${i * 2 + 1}`),
+];
 const ROLE_LABELS = { admin: 'Admin', nurse: 'Med Staff', counselor: 'Counselor' };
 const ROLE_COLORS = {
   admin: 'bg-purple-100 text-purple-700',
@@ -114,9 +118,11 @@ export default function Staff() {
           {form.role === 'counselor' && (
             <div>
               <label className="block text-xs text-slate-500 mb-1">Cabin / Group</label>
-              <input value={form.cabin_group} onChange={e => setForm(f => ({ ...f, cabin_group: e.target.value }))}
-                placeholder="Cabin 4"
-                className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              <select value={form.cabin_group} onChange={e => setForm(f => ({ ...f, cabin_group: e.target.value }))}
+                className="w-full border border-slate-200 rounded-lg px-2 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option value="">— select cabin —</option>
+                {CABIN_GROUPS.map(g => <option key={g} value={g}>{g}</option>)}
+              </select>
             </div>
           )}
           {form.role === 'counselor' && (
