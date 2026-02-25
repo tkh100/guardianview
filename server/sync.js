@@ -116,7 +116,15 @@ function checkAndCreateAlerts(camper, latest) {
   else if (value >= 300) alertType = 'critical_high';
   else if (value > target_high) alertType = 'high';
 
-  if (!alertType) return;
+  if (!alertType) {
+    // Auto-clear BG alerts when back in range
+    db.prepare(`
+      UPDATE alerts SET acknowledged_at = datetime('now')
+      WHERE camper_id = ? AND acknowledged_at IS NULL
+        AND type IN ('low', 'critical_low', 'high', 'critical_high')
+    `).run(camper.id);
+    return;
+  }
 
   // Avoid duplicate unacknowledged alert of same type within 15 minutes
   const existing = db.prepare(`

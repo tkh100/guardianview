@@ -50,67 +50,99 @@ export default function GlucoseChart({ readings, events = [], targetLow = 70, ta
     return '#10b981';
   };
 
+  const hasMealEvents = events.some(e => e.meal_type);
+  const hasMedEvents = events.some(e => e.med_slot);
+  const hasCarbEvents = events.some(e => e.carbs_g > 0 && !e.meal_type);
+  const hasInsulinEvents = events.some(e => (e.dose_given > 0 || e.insulin_units > 0) && !e.meal_type && !e.carbs_g);
+
   return (
-    <ResponsiveContainer width="100%" height={220}>
-      <LineChart data={data} margin={{ top: 16, right: 8, left: -20, bottom: 0 }}>
-        <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-        <XAxis
-          dataKey="ts"
-          type="number"
-          scale="time"
-          domain={['dataMin', 'dataMax']}
-          tickFormatter={tickFormatter}
-          tick={{ fontSize: 11, fill: '#94a3b8' }}
-          tickLine={false}
-          axisLine={false}
-          interval="preserveStartEnd"
-        />
-        <YAxis
-          domain={[40, 400]}
-          tick={{ fontSize: 11, fill: '#94a3b8' }}
-          tickLine={false}
-          axisLine={false}
-        />
-        <Tooltip content={<CustomTooltip />} />
+    <>
+      <ResponsiveContainer width="100%" height={220}>
+        <LineChart data={data} margin={{ top: 16, right: 8, left: -20, bottom: 0 }}>
+          <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+          <XAxis
+            dataKey="ts"
+            type="number"
+            scale="time"
+            domain={['dataMin', 'dataMax']}
+            tickFormatter={tickFormatter}
+            tick={{ fontSize: 11, fill: '#94a3b8' }}
+            tickLine={false}
+            axisLine={false}
+            interval="preserveStartEnd"
+          />
+          <YAxis
+            domain={[40, 400]}
+            tick={{ fontSize: 11, fill: '#94a3b8' }}
+            tickLine={false}
+            axisLine={false}
+          />
+          <Tooltip content={<CustomTooltip />} />
 
-        {/* Target range */}
-        <ReferenceLine y={targetHigh} stroke="#f59e0b" strokeDasharray="4 2" strokeWidth={1} />
-        <ReferenceLine y={targetLow} stroke="#f59e0b" strokeDasharray="4 2" strokeWidth={1} />
-        <ReferenceLine y={55} stroke="#f43f5e" strokeDasharray="4 2" strokeWidth={1} />
+          {/* Target range */}
+          <ReferenceLine y={targetHigh} stroke="#f59e0b" strokeDasharray="4 2" strokeWidth={1} />
+          <ReferenceLine y={targetLow} stroke="#f59e0b" strokeDasharray="4 2" strokeWidth={1} />
+          <ReferenceLine y={55} stroke="#f43f5e" strokeDasharray="4 2" strokeWidth={1} />
 
-        {/* Event markers */}
-        {events.map(e => {
-          const x = new Date(e.created_at).getTime();
-          const isMeal = !!e.meal_type;
-          const isMed = !!e.med_slot;
-          const isCarbs = e.carbs_g > 0;
-          const color = isMeal ? '#8b5cf6' : isMed ? '#14b8a6' : isCarbs ? '#f97316' : '#3b82f6';
-          const parts = [];
-          if (e.meal_type) parts.push(e.meal_type.replace('_', ' '));
-          if (e.med_slot) parts.push('meds');
-          if (e.carbs_g && !isMeal) parts.push(`${e.carbs_g}g`);
-          if (e.dose_given || e.insulin_units) parts.push(`${e.dose_given || e.insulin_units}u`);
-          return (
-            <ReferenceLine
-              key={e.id}
-              x={x}
-              stroke={color}
-              strokeWidth={1.5}
-              strokeDasharray="3 2"
-              label={parts.length ? { value: parts.join(' / '), position: 'insideTopRight', fontSize: 9, fill: color } : undefined}
-            />
-          );
-        })}
+          {/* Event markers */}
+          {events.map(e => {
+            const x = new Date(e.created_at).getTime();
+            const isMeal = !!e.meal_type;
+            const isMed = !!e.med_slot;
+            const isCarbs = e.carbs_g > 0;
+            const color = isMeal ? '#8b5cf6' : isMed ? '#14b8a6' : isCarbs ? '#f97316' : '#3b82f6';
+            const parts = [];
+            if (e.meal_type) parts.push(e.meal_type.replace('_', ' '));
+            if (e.med_slot) parts.push('meds');
+            if (e.carbs_g && !isMeal) parts.push(`${e.carbs_g}g`);
+            if (e.dose_given || e.insulin_units) parts.push(`${e.dose_given || e.insulin_units}u`);
+            return (
+              <ReferenceLine
+                key={e.id}
+                x={x}
+                stroke={color}
+                strokeWidth={1.5}
+                strokeDasharray="3 2"
+                label={parts.length ? { value: parts.join(' / '), position: 'insideTopRight', fontSize: 9, fill: color } : undefined}
+              />
+            );
+          })}
 
-        <Line
-          type="monotone"
-          dataKey="value"
-          stroke={getColor(avgVal)}
-          strokeWidth={2.5}
-          dot={false}
-          activeDot={{ r: 4, fill: '#334155' }}
-        />
-      </LineChart>
-    </ResponsiveContainer>
+          <Line
+            type="monotone"
+            dataKey="value"
+            stroke={getColor(avgVal)}
+            strokeWidth={2.5}
+            dot={false}
+            activeDot={{ r: 4, fill: '#334155' }}
+          />
+        </LineChart>
+      </ResponsiveContainer>
+
+      {events.length > 0 && (hasMealEvents || hasMedEvents || hasCarbEvents || hasInsulinEvents) && (
+        <div className="flex gap-4 flex-wrap mt-2 px-1">
+          {hasMealEvents && (
+            <span className="flex items-center gap-1.5 text-xs text-slate-500">
+              <span className="inline-block w-3 h-0.5 rounded" style={{ backgroundColor: '#8b5cf6' }} />Meal
+            </span>
+          )}
+          {hasMedEvents && (
+            <span className="flex items-center gap-1.5 text-xs text-slate-500">
+              <span className="inline-block w-3 h-0.5 rounded" style={{ backgroundColor: '#14b8a6' }} />Med
+            </span>
+          )}
+          {hasCarbEvents && (
+            <span className="flex items-center gap-1.5 text-xs text-slate-500">
+              <span className="inline-block w-3 h-0.5 rounded" style={{ backgroundColor: '#f97316' }} />Carbs
+            </span>
+          )}
+          {hasInsulinEvents && (
+            <span className="flex items-center gap-1.5 text-xs text-slate-500">
+              <span className="inline-block w-3 h-0.5 rounded" style={{ backgroundColor: '#3b82f6' }} />Insulin
+            </span>
+          )}
+        </div>
+      )}
+    </>
   );
 }

@@ -166,6 +166,7 @@ export default function CamperDetail() {
   const [note, setNote] = useState('');
   const [mealType, setMealType] = useState(null);
   const [logging, setLogging] = useState(false);
+  const [showMore, setShowMore] = useState(false);
 
   // Daily settings state
   const [dailySettings, setDailySettings] = useState(null);
@@ -226,6 +227,11 @@ export default function CamperDetail() {
       return { ...w, medNames, logged, isActive, isMissed };
     }).filter(Boolean);
   }, [camper, todayEvents, now]);
+
+  async function loadEvents() {
+    const e = await api.getEvents(id, fetchHours);
+    setEvents(e);
+  }
 
   async function load(fh, mode) {
     try {
@@ -308,8 +314,8 @@ export default function CamperDetail() {
   async function handleMedGiven(slot) {
     setLogging(true);
     try {
-      const event = await api.addEvent(id, { med_slot: slot });
-      setEvents(prev => [event, ...prev]);
+      await api.addEvent(id, { med_slot: slot });
+      await loadEvents();
     } finally { setLogging(false); }
   }
 
@@ -528,7 +534,7 @@ export default function CamperDetail() {
       {currentMeal && (
         <div className="mb-4">
           <button onClick={() => selectMeal(currentMeal)} disabled={logging}
-            className={`w-full py-3 rounded-xl text-sm font-medium border-2 transition-colors ${
+            className={`w-full py-4 rounded-xl text-base font-semibold border-2 transition-colors ${
               mealType === currentMeal.key
                 ? 'bg-violet-600 text-white border-violet-600'
                 : 'bg-violet-50 text-violet-700 border-violet-200 hover:bg-violet-100'
@@ -566,19 +572,13 @@ export default function CamperDetail() {
 
         {/* Full form */}
         <form onSubmit={handleLog} className="space-y-2">
-          <div className="grid grid-cols-2 gap-2">
+          {/* Core fields: always visible */}
+          <div className="grid grid-cols-3 gap-2">
             <div>
               <label className="text-xs text-slate-500 mb-1 block">BG (fingerstick)</label>
               <input type="number" min="0" max="600" value={bgManual} onChange={e => setBgManual(e.target.value)} placeholder="mg/dL"
                 className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
             </div>
-            <div>
-              <label className="text-xs text-slate-500 mb-1 block">Ketones</label>
-              <input type="number" min="0" max="10" step="0.1" value={ketones} onChange={e => setKetones(e.target.value)} placeholder="mmol/L"
-                className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
-            </div>
-          </div>
-          <div className="grid grid-cols-3 gap-2">
             <div>
               <label className="text-xs text-slate-500 mb-1 block">Carbs (g)</label>
               <input type="number" min="0" max="999" value={carbs}
@@ -592,35 +592,54 @@ export default function CamperDetail() {
               {camper.carb_ratio && <p className="text-xs text-slate-400 mt-0.5">1:{camper.carb_ratio}</p>}
             </div>
             <div>
-              <label className="text-xs text-slate-500 mb-1 block">Calc Dose</label>
-              <input type="number" min="0" max="99" step="0.1" value={calcDose} onChange={e => setCalcDose(e.target.value)}
-                placeholder="0.0" className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
-            </div>
-            <div>
               <label className="text-xs text-slate-500 mb-1 block">Dose Given</label>
               <input type="number" min="0" max="99" step="0.1" value={doseGiven} onChange={e => setDoseGiven(e.target.value)}
                 onBlur={e => { const n = parseFloat(e.target.value); if (!isNaN(n)) setDoseGiven(n.toFixed(1)); }}
                 placeholder="0.0" className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
             </div>
           </div>
-          {/* Checkboxes — show pump or injection specific */}
-          <div className="flex flex-wrap gap-4 py-1">
-            <label className="flex items-center gap-1.5 text-sm text-slate-600">
-              <input type="checkbox" checked={siteChange} onChange={e => setSiteChange(e.target.checked)} className="rounded border-slate-300" />
-              Site Change
-            </label>
-            {isPump ? (
-              <label className="flex items-center gap-1.5 text-sm text-slate-600">
-                <input type="checkbox" checked={prebolus} onChange={e => setPrebolus(e.target.checked)} className="rounded border-slate-300" />
-                Prebolus
-              </label>
-            ) : (
-              <label className="flex items-center gap-1.5 text-sm text-slate-600">
-                <input type="checkbox" checked={longActingGiven} onChange={e => setLongActingGiven(e.target.checked)} className="rounded border-slate-300" />
-                Long Acting Given
-              </label>
-            )}
-          </div>
+
+          {/* More toggle */}
+          <button type="button" onClick={() => setShowMore(v => !v)}
+            className="text-xs text-slate-400 hover:text-slate-600 flex items-center gap-1 transition-colors">
+            {showMore ? '▴ Less' : '▾ More'}
+          </button>
+
+          {/* Advanced fields */}
+          {showMore && (
+            <>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="text-xs text-slate-500 mb-1 block">Ketones</label>
+                  <input type="number" min="0" max="10" step="0.1" value={ketones} onChange={e => setKetones(e.target.value)} placeholder="mmol/L"
+                    className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                </div>
+                <div>
+                  <label className="text-xs text-slate-500 mb-1 block">Calc Dose</label>
+                  <input type="number" min="0" max="99" step="0.1" value={calcDose} onChange={e => setCalcDose(e.target.value)}
+                    placeholder="0.0" className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                </div>
+              </div>
+              <div className="flex flex-wrap gap-4 py-1">
+                <label className="flex items-center gap-1.5 text-sm text-slate-600">
+                  <input type="checkbox" checked={siteChange} onChange={e => setSiteChange(e.target.checked)} className="rounded border-slate-300" />
+                  Site Change
+                </label>
+                {isPump ? (
+                  <label className="flex items-center gap-1.5 text-sm text-slate-600">
+                    <input type="checkbox" checked={prebolus} onChange={e => setPrebolus(e.target.checked)} className="rounded border-slate-300" />
+                    Prebolus
+                  </label>
+                ) : (
+                  <label className="flex items-center gap-1.5 text-sm text-slate-600">
+                    <input type="checkbox" checked={longActingGiven} onChange={e => setLongActingGiven(e.target.checked)} className="rounded border-slate-300" />
+                    Long Acting Given
+                  </label>
+                )}
+              </div>
+            </>
+          )}
+
           {/* Note — visible only with medical access */}
           {hasMedAccess && (
             <input type="text" value={note} onChange={e => setNote(e.target.value)} placeholder="Medical note (staff only)" maxLength={200}

@@ -37,6 +37,7 @@ export const api = {
   connectCGM: (id, data) => request('POST', `/campers/${id}/connect`, data),
   syncCamper: (id) => request('POST', `/campers/${id}/sync`),
   getReadings: (id, hours = 24) => request('GET', `/campers/${id}/readings?hours=${hours}`),
+  getTrends: () => request('GET', '/campers/trends'),
 
   getEvents: (id, hours = 24) => request('GET', `/campers/${id}/events?hours=${hours}`),
   addEvent: (id, data) => request('POST', `/campers/${id}/events`, data),

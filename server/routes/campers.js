@@ -39,6 +39,31 @@ router.get('/', requireAuth, (req, res) => {
   res.json(campers);
 });
 
+// GET /api/campers/trends — TIR and stats for all active campers
+router.get('/trends', requireAuth, (req, res) => {
+  const campers = db.prepare(`
+    SELECT c.id, c.name, c.cabin_group, c.delivery_method,
+           c.target_low, c.target_high,
+           (SELECT value FROM glucose_readings WHERE camper_id=c.id ORDER BY reading_time DESC LIMIT 1) as latest_value,
+           (SELECT trend FROM glucose_readings WHERE camper_id=c.id ORDER BY reading_time DESC LIMIT 1) as latest_trend,
+           (SELECT reading_time FROM glucose_readings WHERE camper_id=c.id ORDER BY reading_time DESC LIMIT 1) as latest_reading_time,
+           ROUND(100.0 * SUM(CASE WHEN r.reading_time >= date('now') AND r.value BETWEEN c.target_low AND c.target_high THEN 1 ELSE 0 END)
+             / NULLIF(SUM(CASE WHEN r.reading_time >= date('now') THEN 1 ELSE 0 END), 0), 0) as tir_today,
+           ROUND(AVG(CASE WHEN r.reading_time >= date('now') THEN r.value END), 0) as avg_today,
+           MAX(CASE WHEN r.reading_time >= date('now') THEN r.value END) as high_today,
+           MIN(CASE WHEN r.reading_time >= date('now') THEN r.value END) as low_today,
+           ROUND(100.0 * SUM(CASE WHEN r.value BETWEEN c.target_low AND c.target_high THEN 1 ELSE 0 END)
+             / NULLIF(COUNT(r.id), 0), 0) as tir_7day
+    FROM campers c
+    LEFT JOIN glucose_readings r ON r.camper_id = c.id
+      AND r.reading_time > datetime('now', '-7 days')
+    WHERE c.is_active = 1
+    GROUP BY c.id
+    ORDER BY c.cabin_group, c.name
+  `).all();
+  res.json(campers);
+});
+
 // GET /api/campers/:id/readings — historical readings
 router.get('/:id/readings', requireAuth, (req, res) => {
   const hours = Math.min(parseInt(req.query.hours) || 24, 168);

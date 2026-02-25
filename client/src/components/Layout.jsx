@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Users, LogOut, Shield, UserCog, Volume2, VolumeX } from 'lucide-react';
+import { LayoutDashboard, Users, LogOut, Shield, UserCog, Volume2, VolumeX, ClipboardList, TrendingUp } from 'lucide-react';
 import { getMuted, setMuted } from '../hooks/useAudioAlerts';
 
 function getUser() {
@@ -55,9 +55,17 @@ export default function Layout() {
             <LayoutDashboard size={16} /> Dashboard
           </NavLink>
           {(user?.role === 'admin' || user?.role === 'nurse') && (
-            <NavLink to="/manage" className={navClass}>
-              <Users size={16} /> Manage Campers
-            </NavLink>
+            <>
+              <NavLink to="/checkin" className={navClass}>
+                <ClipboardList size={16} /> Check-In
+              </NavLink>
+              <NavLink to="/trends" className={navClass}>
+                <TrendingUp size={16} /> Trends
+              </NavLink>
+              <NavLink to="/manage" className={navClass}>
+                <Users size={16} /> Manage Campers
+              </NavLink>
+            </>
           )}
           {user?.role === 'admin' && (
             <NavLink to="/staff" className={navClass}>
@@ -95,10 +103,20 @@ export default function Layout() {
           <span>Dashboard</span>
         </NavLink>
         {(user?.role === 'admin' || user?.role === 'nurse') && (
-          <NavLink to="/manage" className={mobileNavClass}>
-            <Users size={22} />
-            <span>Manage</span>
-          </NavLink>
+          <>
+            <NavLink to="/checkin" className={mobileNavClass}>
+              <ClipboardList size={22} />
+              <span>Check-In</span>
+            </NavLink>
+            <NavLink to="/trends" className={mobileNavClass}>
+              <TrendingUp size={22} />
+              <span>Trends</span>
+            </NavLink>
+            <NavLink to="/manage" className={mobileNavClass}>
+              <Users size={22} />
+              <span>Manage</span>
+            </NavLink>
+          </>
         )}
         {user?.role === 'admin' && (
           <NavLink to="/staff" className={mobileNavClass}>

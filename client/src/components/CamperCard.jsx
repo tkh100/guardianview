@@ -52,12 +52,16 @@ export default function CamperCard({ camper }) {
           </div>
         )}
 
-        {camper.latest_reading_time && (
-          <div className="flex items-center gap-1 text-slate-400 text-xs mt-2">
-            <Clock size={11} />
-            <span>{timeAgo(camper.latest_reading_time)}</span>
-          </div>
-        )}
+        {camper.latest_reading_time && (() => {
+          const mins = Math.round((Date.now() - new Date(camper.latest_reading_time)) / 60_000);
+          const timeColor = mins > 15 ? 'text-rose-400' : mins > 10 ? 'text-amber-400' : 'text-slate-400';
+          return (
+            <div className={`flex items-center gap-1 text-xs mt-2 ${timeColor}`}>
+              <Clock size={11} />
+              <span>{timeAgo(camper.latest_reading_time)}</span>
+            </div>
+          );
+        })()}
 
         {camper.sync_error && (
           <p className="text-rose-500 text-xs mt-1 truncate" title={camper.sync_error}>
