@@ -128,7 +128,7 @@ function CarbsCard({ camper, entry, onNext, onSkip, index, total }) {
   }, [carbs, icr, isf, bg, targetBg]);
 
   // Auto-fill dose given from calc when carbs change (unless manually overridden)
-  useMemo(() => {
+  useEffect(() => {
     if (!doseManual && totalCalc > 0) {
       setDoseGiven(String(totalCalc));
     } else if (!doseManual && carbs === '') {
@@ -308,24 +308,28 @@ export default function CabinView() {
   // Log all
   async function handleLogAll() {
     setLogging(true);
-    let count = 0;
+    const toLog = filtered.filter(camper => {
+      const e = entries[camper.id];
+      return e && (e.bg || e.carbs !== '' || e.doseGiven);
+    });
     try {
-      for (const camper of filtered) {
+      const results = await Promise.allSettled(toLog.map(camper => {
         const e = entries[camper.id];
-        if (!e) continue;
-        const hasData = e.bg || e.carbs !== '' || e.doseGiven;
-        if (!hasData) continue;
-        await api.addEvent(camper.id, {
+        return api.addEvent(camper.id, {
           meal_type: mealKey,
           bg_manual: e.bg ? parseInt(e.bg) : null,
           carbs_g: e.carbs !== '' ? parseInt(e.carbs) : 0,
           calc_dose: e.calcDose ? parseFloat(e.calcDose) : null,
           dose_given: e.doseGiven ? parseFloat(e.doseGiven) : null,
         });
-        count++;
-      }
-      setLoggedCount(count);
+      }));
+      const succeeded = results.filter(r => r.status === 'fulfilled').length;
+      const failed = results.length - succeeded;
+      setLoggedCount(succeeded);
+      if (failed > 0) console.error(`${failed} event(s) failed to log`);
       setDone(true);
+    } catch (err) {
+      console.error('Log all failed:', err);
     } finally { setLogging(false); }
   }
 

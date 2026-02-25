@@ -40,8 +40,8 @@ export default function App() {
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="cabin" element={<CabinView />} />
           <Route path="campers/:id" element={<CamperDetail />} />
-          <Route path="manage" element={<Manage />} />
-          <Route path="staff" element={<Staff />} />
+          <Route path="manage" element={<PrivateRoute roles={['admin', 'nurse']}><Manage /></PrivateRoute>} />
+          <Route path="staff" element={<PrivateRoute roles={['admin']}><Staff /></PrivateRoute>} />
           <Route path="checkin" element={<PrivateRoute roles={['admin', 'nurse']}><Checkin /></PrivateRoute>} />
           <Route path="trends" element={<PrivateRoute roles={['admin', 'nurse']}><Trends /></PrivateRoute>} />
         </Route>
