@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Users, LogOut, Shield, UserCog, Volume2, VolumeX, ClipboardList, TrendingUp } from 'lucide-react';
+import { LayoutDashboard, Users, LogOut, Shield, UserCog, Volume2, VolumeX, ClipboardList, TrendingUp, Home } from 'lucide-react';
 import { getMuted, setMuted } from '../hooks/useAudioAlerts';
 
 function getUser() {
@@ -51,6 +51,9 @@ export default function Layout() {
         </div>
 
         <nav className="flex-1 px-3 py-4 space-y-1">
+          <NavLink to="/cabin" className={navClass}>
+            <Home size={16} /> Cabin View
+          </NavLink>
           <NavLink to="/dashboard" className={navClass}>
             <LayoutDashboard size={16} /> Dashboard
           </NavLink>
@@ -98,6 +101,10 @@ export default function Layout() {
 
       {/* Bottom tab bar — mobile only */}
       <nav className="flex md:hidden fixed bottom-0 inset-x-0 z-50 bg-slate-900 border-t border-slate-700">
+        <NavLink to="/cabin" className={mobileNavClass}>
+          <Home size={22} />
+          <span>Cabin</span>
+        </NavLink>
         <NavLink to="/dashboard" className={mobileNavClass}>
           <LayoutDashboard size={22} />
           <span>Dashboard</span>
