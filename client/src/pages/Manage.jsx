@@ -5,6 +5,11 @@ import { api } from '../api';
 const PROVIDERS = ['dexcom', 'nightscout', 'libre'];
 const AUTH_MODES = { dexcom: ['publisher', 'follower'], nightscout: ['publisher'], libre: ['publisher'] };
 
+const CABIN_GROUPS = [
+  ...Array.from({ length: 10 }, (_, i) => `B${(i + 1) * 2}`),   // B2, B4 … B20
+  ...Array.from({ length: 13 }, (_, i) => `G${i * 2 + 1}`),     // G1, G3 … G25
+];
+
 const EMPTY_FORM = {
   name: '', cabin_group: '', target_low: 70, target_high: 180, carb_ratio: '',
   delivery_method: 'pump',
@@ -105,7 +110,14 @@ function AddCamperForm({ onAdd }) {
       {/* Basic info — always visible */}
       <div className="grid grid-cols-2 gap-3 mb-2">
         <Input label="Full Name *" required value={form.name} onChange={e => set('name', e.target.value)} placeholder="Alex Johnson" />
-        <Input label="Cabin / Group" value={form.cabin_group} onChange={e => set('cabin_group', e.target.value)} placeholder="Cabin 4" />
+        <div>
+          <label className="block text-xs text-slate-500 mb-1">Cabin / Group</label>
+          <select value={form.cabin_group} onChange={e => set('cabin_group', e.target.value)}
+            className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <option value="">— select cabin —</option>
+            {CABIN_GROUPS.map(g => <option key={g} value={g}>{g}</option>)}
+          </select>
+        </div>
         <Input label="Age" type="number" min={1} max={99} value={form.age} onChange={e => set('age', e.target.value)} />
         <div>
           <label className="block text-xs text-slate-500 mb-1">Delivery Method</label>
@@ -385,8 +397,11 @@ function CamperRow({ camper, onUpdate, onDelete }) {
             <form onSubmit={saveEdit} className="flex flex-wrap gap-2 items-center">
               <input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
                 className="border border-slate-200 rounded px-2 py-1 text-sm w-36 focus:outline-none focus:ring-2 focus:ring-blue-500" required />
-              <input value={form.cabin_group} onChange={e => setForm(f => ({ ...f, cabin_group: e.target.value }))}
-                placeholder="Cabin" className="border border-slate-200 rounded px-2 py-1 text-sm w-24 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              <select value={form.cabin_group} onChange={e => setForm(f => ({ ...f, cabin_group: e.target.value }))}
+                className="border border-slate-200 rounded px-1 py-1 text-sm w-24 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option value="">—</option>
+                {CABIN_GROUPS.map(g => <option key={g} value={g}>{g}</option>)}
+              </select>
               <select value={form.delivery_method} onChange={e => setForm(f => ({ ...f, delivery_method: e.target.value }))}
                 className="border border-slate-200 rounded px-1 py-1 text-sm w-24 focus:outline-none focus:ring-2 focus:ring-blue-500">
                 <option value="pump">Pump</option>

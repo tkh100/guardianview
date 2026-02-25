@@ -2,6 +2,11 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../api';
 
+const CABIN_GROUPS = [
+  ...Array.from({ length: 10 }, (_, i) => `B${(i + 1) * 2}`),   // B2, B4 … B20
+  ...Array.from({ length: 13 }, (_, i) => `G${i * 2 + 1}`),     // G1, G3 … G25
+];
+
 function StepBar({ step, total }) {
   return (
     <div className="flex gap-1 mb-6">
@@ -172,7 +177,10 @@ export default function Checkin() {
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className={labelCls}>Cabin / Group</label>
-              <input type="text" value={s1.cabin_group} onChange={f1('cabin_group')} placeholder="e.g. Birch A" className={inputCls} />
+              <select value={s1.cabin_group} onChange={f1('cabin_group')} className={inputCls}>
+                <option value="">— select cabin —</option>
+                {CABIN_GROUPS.map(g => <option key={g} value={g}>{g}</option>)}
+              </select>
             </div>
             <div>
               <label className={labelCls}>Age</label>
