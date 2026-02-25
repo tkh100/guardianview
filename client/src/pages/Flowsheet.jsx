@@ -239,7 +239,7 @@ function CamperDetailModal({ camper, date, onClose }) {
         <div className="px-2 pt-3 shrink-0">
           {readings.length > 0 ? (
             <ResponsiveContainer width="100%" height={220}>
-              <ComposedChart data={chartData} margin={{ top: 4, right: 12, bottom: 4, left: 0 }}>
+              <ComposedChart data={chartData} margin={{ top: 18, right: 12, bottom: 4, left: 0 }}>
                 <XAxis
                   dataKey="t" type="number"
                   domain={[dayStart, dayEnd]}
@@ -263,8 +263,10 @@ function CamperDetailModal({ camper, date, onClose }) {
                 {carbMarkers.map(({ t }, i) => (
                   <ReferenceLine key={`c${i}`} x={t} stroke="#f97316" strokeWidth={1.5} strokeOpacity={0.7} />
                 ))}
-                {insulinMarkers.map(({ t }, i) => (
-                  <ReferenceLine key={`ins${i}`} x={t} stroke="#3b82f6" strokeWidth={1.5} strokeOpacity={0.6} strokeDasharray="3 3" />
+                {insulinMarkers.map(({ t, dose }, i) => (
+                  <ReferenceLine key={`ins${i}`} x={t} stroke="#3b82f6" strokeWidth={1.5} strokeOpacity={0.6} strokeDasharray="3 3"
+                    label={{ value: `${+parseFloat(dose).toFixed(1)}u`, position: 'insideTopRight', fill: '#3b82f6', fontSize: 10, fontWeight: 700 }}
+                  />
                 ))}
                 <Line type="monotone" dataKey="v" stroke={lineColor} strokeWidth={2} dot={false} isAnimationActive={false} />
               </ComposedChart>
