@@ -37,13 +37,13 @@ function getCurrentUser() {
   try { return JSON.parse(localStorage.getItem('gv_user')); } catch { return null; }
 }
 
-// Sort cabin groups: prefix alphabetically, then numerically within prefix (B2, B4…B20 / G1, G3…G25)
+// Sort cabin groups: suffix alphabetically, then numerically within suffix (2B, 4B…20B / 1G, 3G…25G)
 function sortCabins(groups) {
   return [...groups].sort((a, b) => {
-    const aP = a.match(/^[A-Za-z]+/)?.[0] || '';
-    const bP = b.match(/^[A-Za-z]+/)?.[0] || '';
-    const aN = parseInt(a.match(/\d+/)?.[0] || '0');
-    const bN = parseInt(b.match(/\d+/)?.[0] || '0');
+    const aP = a.match(/[A-Za-z]+$/)?.[0] || '';
+    const bP = b.match(/[A-Za-z]+$/)?.[0] || '';
+    const aN = parseInt(a.match(/^\d+/)?.[0] || '0');
+    const bN = parseInt(b.match(/^\d+/)?.[0] || '0');
     if (aP !== bP) return aP.localeCompare(bP);
     return aN - bN;
   });

@@ -4,8 +4,8 @@ import { api } from '../api';
 
 const ROLES = ['nurse', 'counselor', 'admin'];
 const CABIN_GROUPS = [
-  ...Array.from({ length: 10 }, (_, i) => `B${(i + 1) * 2}`),
-  ...Array.from({ length: 13 }, (_, i) => `G${i * 2 + 1}`),
+  ...Array.from({ length: 10 }, (_, i) => `${(i + 1) * 2}B`),
+  ...Array.from({ length: 13 }, (_, i) => `${i * 2 + 1}G`),
 ];
 const ROLE_LABELS = { admin: 'Admin', nurse: 'Med Staff', counselor: 'Counselor' };
 const ROLE_COLORS = {
