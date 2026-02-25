@@ -3,8 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { api } from '../api';
 
 const CABIN_GROUPS = [
-  ...Array.from({ length: 10 }, (_, i) => `B${(i + 1) * 2}`),   // B2, B4 … B20
-  ...Array.from({ length: 13 }, (_, i) => `G${i * 2 + 1}`),     // G1, G3 … G25
+  ...Array.from({ length: 10 }, (_, i) => `${(i + 1) * 2}B`),   // 2B, 4B … 20B
+  ...Array.from({ length: 13 }, (_, i) => `${i * 2 + 1}G`),     // 1G, 3G … 25G
 ];
 
 function StepBar({ step, total }) {

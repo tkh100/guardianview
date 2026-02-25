@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Users, LogOut, Shield, UserCog, Volume2, VolumeX, ClipboardList, TrendingUp, Home } from 'lucide-react';
+import { LayoutDashboard, Users, LogOut, Shield, UserCog, Volume2, VolumeX, ClipboardList, TrendingUp, Home, CalendarDays } from 'lucide-react';
 import { getMuted, setMuted } from '../hooks/useAudioAlerts';
 
 function getUser() {
@@ -65,6 +65,9 @@ export default function Layout() {
               <NavLink to="/trends" className={navClass}>
                 <TrendingUp size={16} /> Trends
               </NavLink>
+              <NavLink to="/daysheet" className={navClass}>
+                <CalendarDays size={16} /> Day Sheet
+              </NavLink>
               <NavLink to="/manage" className={navClass}>
                 <Users size={16} /> Manage Campers
               </NavLink>
@@ -118,6 +121,10 @@ export default function Layout() {
             <NavLink to="/trends" className={mobileNavClass}>
               <TrendingUp size={22} />
               <span>Trends</span>
+            </NavLink>
+            <NavLink to="/daysheet" className={mobileNavClass}>
+              <CalendarDays size={22} />
+              <span>Day Sheet</span>
             </NavLink>
             <NavLink to="/manage" className={mobileNavClass}>
               <Users size={22} />
