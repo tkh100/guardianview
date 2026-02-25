@@ -362,6 +362,7 @@ function CamperRow({ camper, onUpdate, onDelete }) {
   const [editing, setEditing] = useState(false);
   const [connecting, setConnecting] = useState(false);
   const [syncing, setSyncing] = useState(false);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [form, setForm] = useState({
     name: camper.name, cabin_group: camper.cabin_group || '',
     target_low: camper.target_low, target_high: camper.target_high,
@@ -450,10 +451,23 @@ function CamperRow({ camper, onUpdate, onDelete }) {
             className="p-1.5 text-slate-400 hover:text-slate-700 transition-colors rounded">
             <Pencil size={15} />
           </button>
-          <button onClick={() => { if (confirm(`Remove ${camper.name}?`)) onDelete(camper.id); }} title="Remove"
-            className="p-1.5 text-slate-400 hover:text-rose-600 transition-colors rounded">
-            <Trash2 size={15} />
-          </button>
+          {confirmingDelete ? (
+            <span className="flex items-center gap-1 text-xs">
+              <button onClick={() => onDelete(camper.id)}
+                className="px-2 py-1 rounded bg-rose-600 text-white font-medium hover:bg-rose-700 transition-colors">
+                Remove
+              </button>
+              <button onClick={() => setConfirmingDelete(false)}
+                className="px-2 py-1 rounded bg-slate-100 text-slate-600 font-medium hover:bg-slate-200 transition-colors">
+                Cancel
+              </button>
+            </span>
+          ) : (
+            <button onClick={() => setConfirmingDelete(true)} title="Remove"
+              className="p-1.5 text-slate-400 hover:text-rose-600 transition-colors rounded">
+              <Trash2 size={15} />
+            </button>
+          )}
         </div>
       </div>
       {connecting && (
