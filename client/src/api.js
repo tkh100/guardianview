@@ -58,4 +58,6 @@ export const api = {
 
   getSyncStatus: () => request('GET', '/sync/status'),
   runSync: () => request('POST', '/sync/run'),
+
+  getFlowsheet: (date) => request('GET', `/flowsheet?date=${date}`),
 };

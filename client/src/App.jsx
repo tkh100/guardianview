@@ -7,6 +7,7 @@ import Staff from './pages/Staff';
 import Checkin from './pages/Checkin';
 import Trends from './pages/Trends';
 import CabinView from './pages/CabinView';
+import Flowsheet from './pages/Flowsheet';
 import Layout from './components/Layout';
 
 function PrivateRoute({ children, roles }) {
@@ -44,6 +45,7 @@ export default function App() {
           <Route path="staff" element={<PrivateRoute roles={['admin']}><Staff /></PrivateRoute>} />
           <Route path="checkin" element={<PrivateRoute roles={['admin', 'nurse']}><Checkin /></PrivateRoute>} />
           <Route path="trends" element={<PrivateRoute roles={['admin', 'nurse']}><Trends /></PrivateRoute>} />
+          <Route path="daysheet" element={<PrivateRoute roles={['admin', 'nurse']}><Flowsheet /></PrivateRoute>} />
         </Route>
       </Routes>
     </BrowserRouter>
