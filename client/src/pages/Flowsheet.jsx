@@ -4,7 +4,7 @@ import {
   ResponsiveContainer, ComposedChart, Line,
   ReferenceLine, ReferenceArea, XAxis, YAxis, Customized,
 } from 'recharts';
-import { ChevronLeft, ChevronRight, CalendarDays } from 'lucide-react';
+import { ChevronLeft, ChevronRight, CalendarDays, X, Maximize2 } from 'lucide-react';
 import { api } from '../api';
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
@@ -179,9 +179,136 @@ function EventRow({ event }) {
   );
 }
 
+// ─── CamperDetailModal ───────────────────────────────────────────────────────
+
+function CamperDetailModal({ camper, date, onClose }) {
+  const { readings, events } = camper;
+  const values = readings.map(r => r.value);
+
+  const dayStart = Date.UTC(...date.split('-').map((v, i) => i === 1 ? +v - 1 : +v));
+  const dayEnd   = dayStart + 86400000;
+
+  const chartData = readings.map(r => ({
+    t: parseTs(r.reading_time).getTime(),
+    v: r.value,
+  }));
+
+  // X-axis ticks every 3 hours
+  const ticks = Array.from({ length: 9 }, (_, i) => dayStart + i * 3 * 3600000);
+  const fmtHour = (t) => {
+    const h = new Date(t).getUTCHours();
+    if (h === 0) return '12a';
+    if (h === 12) return '12p';
+    return h < 12 ? `${h}a` : `${h - 12}p`;
+  };
+
+  const hasCritical = values.some(v => v < 55 || v > 300);
+  const hasLow      = values.some(v => v < camper.target_low);
+  const lineColor   = hasCritical ? '#ef4444' : hasLow ? '#f59e0b' : '#22c55e';
+
+  const carbMarkers    = events.filter(e => e.carbs_g > 0).map(e => ({ t: parseTs(e.created_at).getTime(), carbs: e.carbs_g }));
+  const insulinMarkers = events.filter(e => e.dose_given > 0 || e.long_acting_given > 0).map(e => ({ t: parseTs(e.created_at).getTime(), dose: e.dose_given || e.long_acting_given }));
+
+  const avg    = values.length ? Math.round(values.reduce((a, b) => a + b, 0) / values.length) : null;
+  const inRange = values.filter(v => v >= camper.target_low && v <= camper.target_high).length;
+  const tir    = values.length ? Math.round(inRange / values.length * 100) : null;
+  const lows   = values.filter(v => v < camper.target_low).length;
+  const highs  = values.filter(v => v > camper.target_high).length;
+
+  return (
+    <div className="fixed inset-0 bg-black/50 z-50 flex items-end sm:items-center justify-center sm:p-4">
+      <div className="bg-white w-full sm:max-w-2xl rounded-t-2xl sm:rounded-2xl shadow-xl flex flex-col max-h-[92vh]">
+
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 shrink-0">
+          <div>
+            <p className="font-bold text-slate-800 text-lg leading-tight">{camper.name}</p>
+            <div className="flex items-center gap-2 mt-0.5">
+              {camper.cabin_group && <span className="text-xs text-slate-500">{camper.cabin_group}</span>}
+              <span className={`text-xs px-1.5 py-0.5 rounded font-medium ${
+                camper.delivery_method === 'pump' ? 'bg-blue-50 text-blue-600' : 'bg-violet-50 text-violet-600'
+              }`}>{camper.delivery_method}</span>
+            </div>
+          </div>
+          <button onClick={onClose} className="p-2 text-slate-400 hover:text-slate-700 rounded-lg hover:bg-slate-100 transition-colors">
+            <X size={20} />
+          </button>
+        </div>
+
+        {/* Chart */}
+        <div className="px-2 pt-3 shrink-0">
+          {readings.length > 0 ? (
+            <ResponsiveContainer width="100%" height={220}>
+              <ComposedChart data={chartData} margin={{ top: 4, right: 12, bottom: 4, left: 0 }}>
+                <XAxis
+                  dataKey="t" type="number"
+                  domain={[dayStart, dayEnd]}
+                  ticks={ticks}
+                  tickFormatter={fmtHour}
+                  tick={{ fontSize: 11, fill: '#94a3b8' }}
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <YAxis
+                  domain={[40, 350]}
+                  ticks={[70, 120, 180, 250, 300]}
+                  tick={{ fontSize: 11, fill: '#94a3b8' }}
+                  axisLine={false}
+                  tickLine={false}
+                  width={32}
+                />
+                <ReferenceArea y1={camper.target_low} y2={camper.target_high} fill="#22c55e" fillOpacity={0.08} />
+                <ReferenceLine y={camper.target_low}  stroke="#f59e0b" strokeWidth={1} strokeDasharray="3 3" />
+                <ReferenceLine y={camper.target_high} stroke="#f59e0b" strokeWidth={1} strokeDasharray="3 3" />
+                {carbMarkers.map(({ t }, i) => (
+                  <ReferenceLine key={`c${i}`} x={t} stroke="#f97316" strokeWidth={1.5} strokeOpacity={0.7} />
+                ))}
+                {insulinMarkers.map(({ t }, i) => (
+                  <ReferenceLine key={`ins${i}`} x={t} stroke="#3b82f6" strokeWidth={1.5} strokeOpacity={0.6} strokeDasharray="3 3" />
+                ))}
+                <Line type="monotone" dataKey="v" stroke={lineColor} strokeWidth={2} dot={false} isAnimationActive={false} />
+              </ComposedChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="h-32 flex items-center justify-center text-slate-300 text-sm">No CGM data for this day</div>
+          )}
+          {/* Legend */}
+          <div className="flex items-center gap-4 text-xs text-slate-400 px-4 pb-2">
+            <span className="flex items-center gap-1"><span className="w-3 h-0.5 bg-orange-400 inline-block" /> carbs</span>
+            <span className="flex items-center gap-1"><span className="w-3 h-0.5 bg-blue-400 border-t border-dashed border-blue-400 inline-block" /> insulin</span>
+            <span className="flex items-center gap-1"><span className="w-3 h-2 bg-green-500/10 border border-green-200 inline-block rounded-sm" /> target range</span>
+          </div>
+        </div>
+
+        {/* Stats */}
+        {values.length > 0 && (
+          <div className="flex items-center gap-4 text-xs px-5 py-2 border-t border-b border-slate-100 shrink-0">
+            {tir !== null && <span className="text-emerald-600 font-semibold">{tir}% in range</span>}
+            {lows > 0 && <span className="text-amber-600 font-semibold">{lows} low{lows !== 1 ? 's' : ''}</span>}
+            {highs > 0 && <span className="text-slate-500">{highs} high{highs !== 1 ? 's' : ''}</span>}
+            <span className="text-slate-400 ml-auto">{avg} avg · {values.length} readings</span>
+          </div>
+        )}
+
+        {/* Events */}
+        <div className="overflow-auto flex-1 px-5 py-4">
+          <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-3">Treatment Events</p>
+          <div className="space-y-2">
+            {events.length > 0 ? (
+              events.map((e, i) => <EventRow key={i} event={e} />)
+            ) : (
+              <p className="text-xs text-slate-300">No treatment events</p>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── CamperDayCard ───────────────────────────────────────────────────────────
 
-function CamperDayCard({ camper, date }) {
+function CamperDayCard({ camper, date, onSelect }) {
   const { readings, events } = camper;
   const values = readings.map(r => r.value);
 
@@ -222,12 +349,21 @@ function CamperDayCard({ camper, date }) {
             </span>
           </div>
         </div>
-        {avg !== null && (
-          <div className="text-right shrink-0">
-            <div className="text-xl font-bold text-slate-800 tabular-nums">{avg}</div>
-            <div className="text-xs text-slate-400">avg mg/dL</div>
-          </div>
-        )}
+        <div className="flex items-center gap-2 shrink-0">
+          {avg !== null && (
+            <div className="text-right">
+              <div className="text-xl font-bold text-slate-800 tabular-nums">{avg}</div>
+              <div className="text-xs text-slate-400">avg mg/dL</div>
+            </div>
+          )}
+          <button
+            onClick={onSelect}
+            className="p-1.5 text-slate-300 hover:text-blue-500 rounded-lg hover:bg-slate-50 transition-colors"
+            title="View full day"
+          >
+            <Maximize2 size={15} />
+          </button>
+        </div>
       </div>
 
       {/* Sparkline */}
@@ -274,6 +410,7 @@ export default function Flowsheet() {
   const [data, setData]           = useState([]);
   const [loading, setLoading]     = useState(true);
   const [groupFilter, setGroupFilter] = useState('all');
+  const [selectedCamper, setSelectedCamper] = useState(null);
   const today = todayUTC();
 
   useEffect(() => {
@@ -369,9 +506,17 @@ export default function Flowsheet() {
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {visible.map(camper => (
-            <CamperDayCard key={camper.id} camper={camper} date={date} />
+            <CamperDayCard key={camper.id} camper={camper} date={date} onSelect={() => setSelectedCamper(camper)} />
           ))}
         </div>
+      )}
+
+      {selectedCamper && (
+        <CamperDetailModal
+          camper={selectedCamper}
+          date={date}
+          onClose={() => setSelectedCamper(null)}
+        />
       )}
     </div>
   );
