@@ -1,0 +1,30 @@
+name: Merge claude branches to master
+
+on:
+  push:
+    branches:
+      - 'claude/**'
+
+permissions:
+  contents: write
+
+jobs:
+  merge-to-master:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout full history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Merge to master and push
+        run: |
+          git checkout master
+          git merge origin/${{ github.ref_name }} --no-edit
+          git push origin master
