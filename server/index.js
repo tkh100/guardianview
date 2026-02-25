@@ -3,10 +3,12 @@ require('dotenv').config({ path: require('path').join(__dirname, '../.env') });
 const express = require('express');
 const path = require('path');
 const bcrypt = require('bcryptjs');
+const helmet = require('helmet');
 const db = require('./db');
 
 const app = express();
-app.use(express.json());
+app.use(helmet());
+app.use(express.json({ limit: '1mb' }));
 
 // CORS for development
 if (process.env.NODE_ENV !== 'production') {

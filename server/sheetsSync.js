@@ -188,17 +188,17 @@ async function runSync(db) {
       `SELECT e.*, c.name AS camper_name, c.cabin_group, u.username AS logged_by_name
        FROM camper_events e
        LEFT JOIN campers c ON c.id = e.camper_id
-       LEFT JOIN app_users u ON u.id = e.logged_by
+       LEFT JOIN app_users u ON u.id = e.created_by
        WHERE e.id > ? ORDER BY e.id`,
       r => [
-        r.id, r.event_time, r.camper_name, r.cabin_group ?? '',
+        r.id, r.created_at, r.camper_name, r.cabin_group ?? '',
         r.meal_type ?? '', r.med_slot ?? '',
-        r.glucose_value ?? '', r.bg_manual ?? '',
-        r.ketones ?? '', r.carbs ?? '',
+        r.insulin_units ?? '', r.bg_manual ?? '',
+        r.ketones ?? '', r.carbs_g ?? '',
         r.calc_dose ?? '', r.dose_given ?? '',
         r.site_change ? 'Yes' : '', r.prebolus ? 'Yes' : '',
         r.long_acting_given ? 'Yes' : '',
-        r.notes ?? '', r.logged_by_name ?? '',
+        r.note ?? '', r.logged_by_name ?? '',
       ]
     );
 
@@ -209,7 +209,7 @@ async function runSync(db) {
        FROM glucose_readings g
        LEFT JOIN campers c ON c.id = g.camper_id
        WHERE g.id > ? ORDER BY g.id`,
-      r => [r.id, r.reading_time, r.camper_name, r.cabin_group ?? '', r.glucose_value, r.trend ?? '']
+      r => [r.id, r.reading_time, r.camper_name, r.cabin_group ?? '', r.value, r.trend ?? '']
     );
 
     // Alerts
@@ -221,7 +221,7 @@ async function runSync(db) {
        LEFT JOIN app_users u ON u.id = a.acknowledged_by
        WHERE a.id > ? ORDER BY a.id`,
       r => [
-        r.id, r.created_at, r.camper_name, r.alert_type, r.alert_value ?? '',
+        r.id, r.created_at, r.camper_name, r.type, r.value ?? '',
         r.ack_by_name ?? '', r.acknowledged_at ?? '',
       ]
     );

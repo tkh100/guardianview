@@ -17,6 +17,7 @@ router.get('/', ...requireRole('admin'), (req, res) => {
 router.post('/', ...requireRole('admin'), async (req, res) => {
   const { username, password, role, cabin_group } = req.body;
   if (!username || !password) return res.status(400).json({ error: 'Username and password required' });
+  if (password.length < 8) return res.status(400).json({ error: 'Password must be at least 8 characters' });
   if (!['admin', 'nurse', 'counselor'].includes(role)) return res.status(400).json({ error: 'Invalid role' });
 
   const existing = db.prepare('SELECT id FROM app_users WHERE username=?').get(username);
@@ -36,7 +37,7 @@ router.post('/', ...requireRole('admin'), async (req, res) => {
 // PUT /api/users/:id/password — reset password (admin only)
 router.put('/:id/password', ...requireRole('admin'), async (req, res) => {
   const { password } = req.body;
-  if (!password || password.length < 6) return res.status(400).json({ error: 'Password must be at least 6 characters' });
+  if (!password || password.length < 8) return res.status(400).json({ error: 'Password must be at least 8 characters' });
 
   const hash = await bcrypt.hash(password, 10);
   db.prepare('UPDATE app_users SET password_hash=? WHERE id=?').run(hash, req.params.id);
