@@ -319,9 +319,13 @@ function fmtBG(bgArr) {
   const manual = bgArr.filter(b => !b.cgm);
   const cgm    = bgArr.filter(b => b.cgm);
   const parts  = [];
+  // All fingerstick readings, each labeled
   if (manual.length) parts.push(...manual.map(b => `FS:${b.val}`));
-  // Only show last CGM reading per slot to avoid clutter (readings every 5 min)
-  if (cgm.length)    parts.push(`CGM:${cgm[cgm.length - 1].val}`);
+  // Average of CGM readings for the slot (readings every 5 min → up to 12/hr)
+  if (cgm.length) {
+    const avg = Math.round(cgm.reduce((s, b) => s + b.val, 0) / cgm.length);
+    parts.push(`CGM:${avg}`);
+  }
   return parts.join(' / ');
 }
 function fmtNums(arr) {
@@ -358,7 +362,10 @@ function hourVal(events, readings, hour, field) {
     const cgm    = readings.filter(r => getHour(r.reading_time) === hour);
     const parts  = [];
     if (manual.length) parts.push(...manual.map(e => `FS:${e.bg_manual}`));
-    if (cgm.length)    parts.push(`CGM:${cgm[cgm.length - 1].value}`);
+    if (cgm.length) {
+      const avg = Math.round(cgm.reduce((s, r) => s + r.value, 0) / cgm.length);
+      parts.push(`CGM:${avg}`);
+    }
     return parts.join(' / ');
   }
   const evs = events.filter(e => getHour(e.created_at) === hour);
