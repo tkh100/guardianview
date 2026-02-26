@@ -254,10 +254,25 @@ function csvCell(val) {
 }
 function csvRow(cells) { return cells.map(csvCell).join(','); }
 
+// Camp timezone offset in hours from UTC (e.g. -5 for EST, -4 for EDT).
+// Set via TZ_OFFSET_HOURS env var or default to -5 (EST).
+const CAMP_TZ_OFFSET = parseInt(process.env.TZ_OFFSET_HOURS ?? '-5', 10);
+
 function getHour(isoStr) {
-  // SQLite stores as local time (no 'Z' suffix), so parse as local
   const s = isoStr.replace(' ', 'T');
-  return new Date(s.includes('Z') ? s : s + 'Z').getHours();
+  const utcMs = new Date(s.includes('Z') ? s : s + 'Z').getTime();
+  // Shift into camp local time before extracting the hour
+  return new Date(utcMs + CAMP_TZ_OFFSET * 3_600_000).getUTCHours();
+}
+
+// Return the UTC ISO strings that bracket a single local calendar day.
+// e.g. '2025-05-25' in EST (offset -5) → start '2025-05-25T05:00:00Z', end '2025-05-26T05:00:00Z'
+function localDayUtcRange(localDateStr) {
+  const midnightUtcMs = new Date(localDateStr + 'T00:00:00Z').getTime()
+    - CAMP_TZ_OFFSET * 3_600_000;  // subtract offset: for -5 this adds 5 hrs
+  const start = new Date(midnightUtcMs).toISOString().replace('T', ' ').slice(0, 19);
+  const end   = new Date(midnightUtcMs + 86_400_000).toISOString().replace('T', ' ').slice(0, 19);
+  return { start, end };
 }
 
 // Map each data column index (0-based, 25 wide) to the hour(s) it covers
@@ -302,7 +317,12 @@ function buildColData(events, readings) {
 function fmtBG(bgArr) {
   if (!bgArr.length) return '';
   const manual = bgArr.filter(b => !b.cgm);
-  return (manual.length ? manual : bgArr).map(b => b.val).join('/');
+  const cgm    = bgArr.filter(b => b.cgm);
+  const parts  = [];
+  if (manual.length) parts.push(...manual.map(b => `FS:${b.val}`));
+  // Only show last CGM reading per slot to avoid clutter (readings every 5 min)
+  if (cgm.length)    parts.push(`CGM:${cgm[cgm.length - 1].val}`);
+  return parts.join(' / ');
 }
 function fmtNums(arr) {
   if (!arr.length) return '';
@@ -335,9 +355,11 @@ function dataRow(label, colData, field, N = 25) {
 function hourVal(events, readings, hour, field) {
   if (field === 'bg') {
     const manual = events.filter(e => e.bg_manual != null && getHour(e.created_at) === hour);
-    if (manual.length) return manual.map(e => e.bg_manual).join('/');
-    const cgm = readings.filter(r => getHour(r.reading_time) === hour);
-    return cgm.map(r => r.value).join('/');
+    const cgm    = readings.filter(r => getHour(r.reading_time) === hour);
+    const parts  = [];
+    if (manual.length) parts.push(...manual.map(e => `FS:${e.bg_manual}`));
+    if (cgm.length)    parts.push(`CGM:${cgm[cgm.length - 1].value}`);
+    return parts.join(' / ');
   }
   const evs = events.filter(e => getHour(e.created_at) === hour);
   switch (field) {
@@ -378,21 +400,20 @@ router.get('/:id/export-flowsheet.csv', ...requireRole('admin', 'nurse'), (req, 
       const d = new Date(weekStart + 'T12:00:00Z');
       d.setUTCDate(d.getUTCDate() + i);
       const dateStr = d.toISOString().slice(0, 10);
-      const nd = new Date(d); nd.setUTCDate(nd.getUTCDate() + 1);
-      const nextStr = nd.toISOString().slice(0, 10);
+      const { start, end } = localDayUtcRange(dateStr);
 
       const events = db.prepare(`
         SELECT created_at, bg_manual, ketones, carbs_g, calc_dose, dose_given,
                site_change, long_acting_given, prebolus, note
         FROM camper_events WHERE camper_id=? AND created_at >= ? AND created_at < ?
         ORDER BY created_at ASC
-      `).all(camperId, dateStr, nextStr);
+      `).all(camperId, start, end);
 
       const readings = db.prepare(`
         SELECT reading_time, value FROM glucose_readings
         WHERE camper_id=? AND reading_time >= ? AND reading_time < ?
         ORDER BY reading_time ASC
-      `).all(camperId, dateStr, nextStr);
+      `).all(camperId, start, end);
 
       const settings = db.prepare(
         'SELECT * FROM daily_settings WHERE camper_id=? AND setting_date=?'
@@ -555,11 +576,7 @@ router.get('/:id/print-flowsheet', ...requireRole('admin', 'nurse'), (req, res) 
       const d = new Date(weekStart + 'T12:00:00Z');
       d.setUTCDate(d.getUTCDate() + i);
       const dateStr = d.toISOString().slice(0, 10);
-      const nextDateStr = (() => {
-        const n = new Date(d);
-        n.setUTCDate(n.getUTCDate() + 1);
-        return n.toISOString().slice(0, 10);
-      })();
+      const { start, end } = localDayUtcRange(dateStr);
 
       const settings = db.prepare(
         'SELECT * FROM daily_settings WHERE camper_id=? AND setting_date=?'
@@ -571,14 +588,14 @@ router.get('/:id/print-flowsheet', ...requireRole('admin', 'nurse'), (req, res) 
         FROM camper_events
         WHERE camper_id=? AND created_at >= ? AND created_at < ?
         ORDER BY created_at ASC
-      `).all(camperId, dateStr, nextDateStr);
+      `).all(camperId, start, end);
 
       const readings = db.prepare(`
         SELECT reading_time, value, trend
         FROM glucose_readings
         WHERE camper_id=? AND reading_time >= ? AND reading_time < ?
         ORDER BY reading_time ASC
-      `).all(camperId, dateStr, nextDateStr);
+      `).all(camperId, start, end);
 
       days.push({ date: dateStr, dayIndex: i, events, readings, settings });
     }
