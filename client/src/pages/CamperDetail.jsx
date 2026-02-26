@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, RefreshCw, Wifi, WifiOff, Trash2, Pill, Check, ChevronLeft, ChevronRight, Printer } from 'lucide-react';
+import { ArrowLeft, RefreshCw, Wifi, WifiOff, Trash2, Pill, Check, ChevronLeft, ChevronRight, Printer, Download } from 'lucide-react';
 import { api } from '../api';
 import GlucoseIndicator, { getGlucoseStatus, STATUS_STYLES } from '../components/GlucoseIndicator';
 import GlucoseChart from '../components/GlucoseChart';
@@ -167,6 +167,7 @@ export default function CamperDetail() {
   const [note, setNote] = useState('');
   const [mealType, setMealType] = useState(null);
   const [logging, setLogging] = useState(false);
+  const [exporting, setExporting] = useState(false);
   const [showMore, setShowMore] = useState(false);
   const [eventTime, setEventTime] = useState('');
 
@@ -390,8 +391,25 @@ export default function CamperDetail() {
               {syncing ? 'Syncing...' : 'Sync'}
             </button>
             <button
+              onClick={async () => {
+                const today = new Date();
+                const day = today.getDay();
+                const diffToSat = day >= 6 ? 0 : day + 1;
+                today.setDate(today.getDate() - diffToSat);
+                const weekStart = today.toISOString().slice(0, 10);
+                setExporting(true);
+                try { await api.downloadFlowsheet(id, weekStart); }
+                finally { setExporting(false); }
+              }}
+              disabled={exporting}
+              className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800 disabled:opacity-40 transition-colors py-1 px-2 rounded-lg"
+              title="Download flowsheet CSV"
+            >
+              <Download size={14} />
+              {exporting ? 'Exporting…' : 'Export CSV'}
+            </button>
+            <button
               onClick={() => {
-                // Default to most recent Saturday as week start
                 const today = new Date();
                 const day = today.getDay();
                 const diffToSat = day >= 6 ? 0 : day + 1;

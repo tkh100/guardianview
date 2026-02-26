@@ -66,4 +66,23 @@ export const api = {
 
   getFlowsheet: (date) => request('GET', `/flowsheet?date=${date}`),
   getPrintFlowsheet: (id, weekStart) => request('GET', `/campers/${id}/print-flowsheet${weekStart ? `?week_start=${weekStart}` : ''}`),
+
+  // Triggers a CSV file download matching the physical flowsheet format
+  downloadFlowsheet: async (id, weekStart) => {
+    const token = getToken();
+    const url = `${BASE}/campers/${id}/export-flowsheet.csv${weekStart ? `?week_start=${weekStart}` : ''}`;
+    const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+    if (!res.ok) throw new Error(`Export failed (${res.status})`);
+    const blob = await res.blob();
+    const disp = res.headers.get('Content-Disposition') || '';
+    const match = disp.match(/filename="([^"]+)"/);
+    const filename = match ? match[1] : `flowsheet_${weekStart || 'week'}.csv`;
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(a.href);
+  },
 };
