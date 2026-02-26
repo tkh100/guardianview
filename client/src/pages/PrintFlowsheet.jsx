@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { api } from '../api';
 
+
 // ---------------------------------------------------------------------------
 // Time slot definitions
 // Each slot covers one or more hours (0–23).
@@ -398,6 +399,7 @@ export default function PrintFlowsheet() {
   const [searchParams] = useSearchParams();
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
+  const [exporting, setExporting] = useState(false);
   const [weekStart, setWeekStart] = useState(() => {
     if (searchParams.get('week_start')) return searchParams.get('week_start');
     // Default: most recent Saturday
@@ -463,6 +465,17 @@ export default function PrintFlowsheet() {
               onChange={e => setWeekStart(e.target.value)}
               style={{ marginLeft: '6px' }} />
           </label>
+          <button
+            onClick={async () => {
+              setExporting(true);
+              try { await api.downloadFlowsheet(id, weekStart); }
+              finally { setExporting(false); }
+            }}
+            disabled={exporting}
+            style={{ background: '#10b981' }}
+          >
+            {exporting ? 'Exporting…' : '⬇ Download CSV'}
+          </button>
           <button onClick={() => window.print()}>🖨 Print / Save PDF</button>
         </div>
       </div>

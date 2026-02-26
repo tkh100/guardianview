@@ -243,6 +243,294 @@ router.post('/:id/sync', requireAuth, async (req, res) => {
   res.json({ ok: !updated.sync_error, error: updated.sync_error || null });
 });
 
+// ─── CSV helpers ────────────────────────────────────────────────────────────
+
+function csvCell(val) {
+  if (val === null || val === undefined) return '';
+  const str = String(val);
+  return (str.includes(',') || str.includes('"') || str.includes('\n'))
+    ? '"' + str.replace(/"/g, '""') + '"'
+    : str;
+}
+function csvRow(cells) { return cells.map(csvCell).join(','); }
+
+function getHour(isoStr) {
+  // SQLite stores as local time (no 'Z' suffix), so parse as local
+  const s = isoStr.replace(' ', 'T');
+  return new Date(s.includes('Z') ? s : s + 'Z').getHours();
+}
+
+// Map each data column index (0-based, 25 wide) to the hour(s) it covers
+const COL_TO_HOURS = {
+  2: [0], 3: [1], 4: [2],
+  5: [3,4,5,6],              // Overnight
+  8: [7], 9: [8], 10: [9], 11: [10], 12: [11],
+  13: [12], 14: [13], 15: [14], 16: [15], 17: [16],
+  18: [17], 19: [18], 20: [19], 21: [20], 22: [21], 23: [22], 24: [23],
+};
+const HOUR_TO_COL = {};
+for (const [col, hrs] of Object.entries(COL_TO_HOURS)) {
+  for (const h of hrs) HOUR_TO_COL[h] = parseInt(col, 10);
+}
+
+function buildColData(events, readings) {
+  const init = () => ({ bg: [], ketones: [], carbs: [], calcDose: [], doseGiven: [], siteChange: false, longActing: false, prebolus: false, notes: [] });
+  const map = {};
+  for (const col of Object.keys(COL_TO_HOURS)) map[col] = init();
+
+  readings.forEach(r => {
+    const col = HOUR_TO_COL[getHour(r.reading_time)];
+    if (col != null && map[col]) map[col].bg.push({ val: r.value, cgm: true });
+  });
+  events.forEach(ev => {
+    const col = HOUR_TO_COL[getHour(ev.created_at)];
+    if (col == null || !map[col]) return;
+    const c = map[col];
+    if (ev.bg_manual != null)   c.bg.push({ val: ev.bg_manual, cgm: false });
+    if (ev.ketones != null)     c.ketones.push(ev.ketones);
+    if (ev.carbs_g != null)     c.carbs.push(ev.carbs_g);
+    if (ev.calc_dose != null)   c.calcDose.push(ev.calc_dose);
+    if (ev.dose_given != null)  c.doseGiven.push(ev.dose_given);
+    if (ev.site_change)         c.siteChange = true;
+    if (ev.long_acting_given)   c.longActing = true;
+    if (ev.prebolus)            c.prebolus = true;
+    if (ev.note)                c.notes.push(ev.note);
+  });
+  return map;
+}
+
+function fmtBG(bgArr) {
+  if (!bgArr.length) return '';
+  const manual = bgArr.filter(b => !b.cgm);
+  return (manual.length ? manual : bgArr).map(b => b.val).join('/');
+}
+function fmtNums(arr) {
+  if (!arr.length) return '';
+  return arr.map(v => Number.isInteger(v) ? v : parseFloat(v.toFixed(1))).join('/');
+}
+
+function dataRow(label, colData, field, N = 25) {
+  const cells = new Array(N).fill('');
+  cells[0] = label;
+  for (const [col, data] of Object.entries(colData)) {
+    const c = parseInt(col, 10);
+    let v = '';
+    switch (field) {
+      case 'bg':         v = fmtBG(data.bg); break;
+      case 'ketones':    v = fmtNums(data.ketones); break;
+      case 'carbs':      v = fmtNums(data.carbs); break;
+      case 'calcDose':   v = fmtNums(data.calcDose); break;
+      case 'doseGiven':  v = fmtNums(data.doseGiven); break;
+      case 'site':       v = data.siteChange ? 'Y' : ''; break;
+      case 'longActing': v = data.longActing ? 'Y' : ''; break;
+      case 'prebolus':   v = data.prebolus ? 'Y' : ''; break;
+      case 'notes':      v = data.notes.join('; '); break;
+    }
+    cells[c] = v;
+  }
+  return cells;
+}
+
+// Directly pull a single field from a day's events/readings for a specific hour
+function hourVal(events, readings, hour, field) {
+  if (field === 'bg') {
+    const manual = events.filter(e => e.bg_manual != null && getHour(e.created_at) === hour);
+    if (manual.length) return manual.map(e => e.bg_manual).join('/');
+    const cgm = readings.filter(r => getHour(r.reading_time) === hour);
+    return cgm.map(r => r.value).join('/');
+  }
+  const evs = events.filter(e => getHour(e.created_at) === hour);
+  switch (field) {
+    case 'ketones':    return fmtNums(evs.flatMap(e => e.ketones != null ? [e.ketones] : []));
+    case 'carbs':      return fmtNums(evs.flatMap(e => e.carbs_g != null ? [e.carbs_g] : []));
+    case 'calcDose':   return fmtNums(evs.flatMap(e => e.calc_dose != null ? [e.calc_dose] : []));
+    case 'doseGiven':  return fmtNums(evs.flatMap(e => e.dose_given != null ? [e.dose_given] : []));
+    case 'site':       return evs.some(e => e.site_change) ? 'Y' : '';
+    case 'longActing': return evs.some(e => e.long_acting_given) ? 'Y' : '';
+    case 'prebolus':   return evs.some(e => e.prebolus) ? 'Y' : '';
+    default: return '';
+  }
+}
+
+// GET /api/campers/:id/export-flowsheet.csv?week_start=YYYY-MM-DD
+router.get('/:id/export-flowsheet.csv', ...requireRole('admin', 'nurse'), (req, res) => {
+  try {
+    const camperId = req.params.id;
+    const camper = db.prepare('SELECT * FROM campers WHERE id=? AND is_active=1').get(camperId);
+    if (!camper) return res.status(404).json({ error: 'Camper not found' });
+
+    let weekStart = req.query.week_start;
+    if (!weekStart) {
+      const today = new Date();
+      const day = today.getDay();
+      const diffToSat = day >= 6 ? 0 : day + 1;
+      today.setDate(today.getDate() - diffToSat);
+      weekStart = today.toISOString().slice(0, 10);
+    }
+
+    const isPump = camper.delivery_method === 'pump';
+    const N = 25;
+    const empty = () => new Array(N).fill('');
+
+    // Fetch 8 days: arrival Saturday (index 0) + Sun–Sat (indices 1–7)
+    const days = [];
+    for (let i = 0; i < 8; i++) {
+      const d = new Date(weekStart + 'T12:00:00Z');
+      d.setUTCDate(d.getUTCDate() + i);
+      const dateStr = d.toISOString().slice(0, 10);
+      const nd = new Date(d); nd.setUTCDate(nd.getUTCDate() + 1);
+      const nextStr = nd.toISOString().slice(0, 10);
+
+      const events = db.prepare(`
+        SELECT created_at, bg_manual, ketones, carbs_g, calc_dose, dose_given,
+               site_change, long_acting_given, prebolus, note
+        FROM camper_events WHERE camper_id=? AND created_at >= ? AND created_at < ?
+        ORDER BY created_at ASC
+      `).all(camperId, dateStr, nextStr);
+
+      const readings = db.prepare(`
+        SELECT reading_time, value FROM glucose_readings
+        WHERE camper_id=? AND reading_time >= ? AND reading_time < ?
+        ORDER BY reading_time ASC
+      `).all(camperId, dateStr, nextStr);
+
+      const settings = db.prepare(
+        'SELECT * FROM daily_settings WHERE camper_id=? AND setting_date=?'
+      ).get(camperId, dateStr) || null;
+
+      days.push({ date: dateStr, dayIndex: i, events, readings, settings, colData: buildColData(events, readings) });
+    }
+
+    const rows = [];
+    const sat = days[0]; // arrival Saturday
+
+    // ── Row 1: title ────────────────────────────────────────────────────────
+    const r0 = empty(); r0[1] = isPump ? 'Pump Flowsheet' : 'Injection Flowsheet';
+    rows.push(r0);
+
+    // ── Row 2: Name / Age / Group / Allergies ───────────────────────────────
+    const r1 = empty();
+    r1[0] = 'Name:'; r1[1] = camper.name;
+    r1[9] = 'Age:';  r1[10] = camper.age ?? '';
+    r1[13] = 'Group:'; r1[14] = camper.cabin_group ?? '';
+    r1[19] = 'Allergies:'; r1[20] = camper.allergies ?? '';
+    rows.push(r1);
+
+    // ── Row 3: Medications ──────────────────────────────────────────────────
+    const r2 = empty();
+    r2[0] = 'Medications:';
+    r2[2] = 'Breakfast'; r2[3] = camper.med_breakfast ?? '';
+    r2[6] = 'Lunch';     r2[7] = camper.med_lunch ?? '';
+    r2[10] = 'Dinner';   r2[11] = camper.med_dinner ?? '';
+    r2[13] = 'Bed';      r2[14] = camper.med_bed ?? '';
+    r2[16] = 'Emergency';r2[17] = camper.med_emergency ?? '';
+    rows.push(r2);
+
+    // ── Row 4: A1c / Weight / Closed loop ───────────────────────────────────
+    const r3 = empty();
+    if (isPump) {
+      r3[0] = 'Closed loop?';
+      r3[3] = 'Yes'; r3[4] = camper.closed_loop ? 'X' : '';
+      r3[6] = 'No';  r3[7] = !camper.closed_loop ? 'X' : '';
+      r3[9] = 'A1c:'; r3[10] = camper.a1c ?? '';
+      r3[13] = 'Weight:'; r3[14] = camper.weight ?? '';
+    } else {
+      r3[0] = 'A1c:'; r3[1] = camper.a1c ?? '';
+      r3[5] = 'Weight:'; r3[6] = camper.weight ?? '';
+    }
+    rows.push(r3);
+
+    rows.push(empty()); // blank
+
+    // ── Saturday mini-grid (arrival day, 1P–11P only) ───────────────────────
+    // PM hours 13–23 → display cols 14–24
+    const PM_COLS  = [14,15,16,17,18,19,20,21,22,23,24];
+    const PM_HOURS = [13,14,15,16,17,18,19,20,21,22,23];
+    const PM_HDRS  = ['1P','2P','3P','4P','5P','6P','7P','8P','9P','10P','11P'];
+
+    const satHdr = empty();
+    satHdr[0] = 'Long acting:'; satHdr[1] = camper.long_acting_type ?? '';
+    satHdr[6] = 'Saturday'; satHdr[10] = 'Registration';
+    PM_HDRS.forEach((h, i) => { satHdr[PM_COLS[i]] = h; });
+    rows.push(satHdr);
+
+    const FIELDS = [
+      ['Short acting:', camper.short_acting_type ?? '',  'Blood Glucose', 'bg'],
+      ['',              '',                               'Ketones',        'ketones'],
+      ['CGM Pin:',      camper.cgm_pin ?? '',             'Carbohydrates',  'carbs'],
+      [isPump ? 'Pump Pin:' : 'Notes:', isPump ? (camper.pump_pin ?? '') : (camper.profile_notes ?? ''), 'Calculated dose', 'calcDose'],
+      [isPump ? 'Notes:' : '', isPump ? (camper.profile_notes ?? '') : '', 'Dose given', 'doseGiven'],
+      ['N= Nabs', 'T=Tabs', isPump ? 'Site change' : 'Long acting given', isPump ? 'site' : 'longActing'],
+    ];
+
+    FIELDS.forEach(([lbl0, val0, lbl6, field]) => {
+      const row = empty();
+      row[0] = lbl0; row[1] = val0; row[6] = lbl6;
+      PM_COLS.forEach((col, i) => { row[col] = hourVal(sat.events, sat.readings, PM_HOURS[i], field); });
+      rows.push(row);
+    });
+
+    rows.push(empty()); // blank
+
+    // ── Daily grids: Sun (days[1]) → Sat departure (days[7]) ────────────────
+    const DAY_NAMES = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+    const INJECTION_ROWS = [
+      ['Blood Glucose','bg'], ['Ketones','ketones'], ['Carbohydrates','carbs'],
+      ['Calculated dose','calcDose'], ['Dose given','doseGiven'],
+      ['Site change','site'], ['Long acting given','longActing'], ['Extra notes','notes'],
+    ];
+    const PUMP_ROWS = [
+      ['Blood Glucose','bg'], ['Ketones','ketones'], ['Carbohydrates','carbs'],
+      ['Calculated dose','calcDose'], ['Dose given','doseGiven'],
+      ['Site change','site'], ['Prebolus given?','prebolus'], ['Extra notes','notes'],
+    ];
+    const DATA_ROWS = isPump ? PUMP_ROWS : INJECTION_ROWS;
+
+    for (let di = 1; di <= 7; di++) {
+      const dayObj = days[di];
+      if (!dayObj) continue;
+      const isDep = di === 7; // departure Saturday
+      const d2 = new Date(dayObj.date + 'T12:00:00');
+      const dName = DAY_NAMES[d2.getDay()];
+
+      // Column header row
+      const hdr = empty();
+      hdr[0] = dName;
+      hdr[2] = '12A'; hdr[3] = '1A'; hdr[4] = '2A'; hdr[5] = 'Overnight';
+      hdr[8] = '7A';  hdr[9] = '8A'; hdr[10] = '9A'; hdr[11] = '10A'; hdr[12] = '11A';
+      hdr[13] = '12P'; hdr[14] = '1P'; hdr[15] = '2P'; hdr[16] = '3P'; hdr[17] = '4P';
+      hdr[18] = '5P';  hdr[19] = '6P'; hdr[20] = '7P'; hdr[21] = '8P'; hdr[22] = '9P';
+      hdr[23] = isDep ? '10A' : '10P';
+      hdr[24] = isDep ? 'Other' : '11P';
+      rows.push(hdr);
+
+      for (const [label, field] of DATA_ROWS) {
+        rows.push(dataRow(label, dayObj.colData, field, N));
+      }
+      rows.push(empty());
+    }
+
+    // ── Footer (mirrors paper form corner labels) ────────────────────────────
+    const ftr1 = empty(); ftr1[15] = 'Notes:'; rows.push(ftr1);
+    const ftr2 = empty();
+    ftr2[0] = 'N= Nabs'; ftr2[1] = 'T=Tabs'; ftr2[3] = 'M=Milk';
+    rows.push(ftr2);
+    const ftr3 = empty(); ftr3[15] = 'Name:'; ftr3[16] = camper.name; rows.push(ftr3);
+    const ftr4 = empty(); ftr4[15] = 'Group:'; ftr4[16] = camper.cabin_group ?? ''; rows.push(ftr4);
+
+    const csv = rows.map(r => csvRow(r)).join('\r\n');
+    const safe = (camper.name || 'camper').replace(/[^a-z0-9]/gi, '_');
+    const filename = `${safe}_${isPump ? 'pump' : 'injection'}_flowsheet_${weekStart}.csv`;
+
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.send(csv);
+  } catch (err) {
+    console.error('[export-flowsheet.csv]', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // GET /api/campers/:id/print-flowsheet?week_start=YYYY-MM-DD
 // Returns full weekly flowsheet data for printing (admin/nurse only)
 router.get('/:id/print-flowsheet', ...requireRole('admin', 'nurse'), (req, res) => {
