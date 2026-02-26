@@ -70,9 +70,8 @@ function fmtNums(arr) {
   return arr.map(v => (Number.isInteger(v) ? v : parseFloat(v.toFixed(1)))).join(', ');
 }
 
-function bgRange(bgs, targetLow, targetHigh) {
-  if (!bgs.length) return null;
-  const vals = bgs.map(b => b.val);
+function bgInfo(vals, targetLow, targetHigh) {
+  if (!vals.length) return null;
   const min = Math.min(...vals), max = Math.max(...vals);
   const hasCrit = vals.some(v => v < 55 || v > 300);
   const hasLow  = vals.some(v => v < targetLow);
@@ -99,7 +98,8 @@ function HourlyFlowTable({ readings, events, targetLow, targetHigh, isPump }) {
           <thead>
             <tr className="bg-slate-50">
               <th className="text-left py-1.5 px-2 text-[10px] font-semibold text-slate-500 uppercase tracking-wide rounded-tl-lg w-10">Time</th>
-              <th className="text-center py-1.5 px-1 text-[10px] font-semibold text-slate-500 uppercase tracking-wide">BG</th>
+              <th className="text-center py-1.5 px-1 text-[10px] font-semibold text-slate-500 uppercase tracking-wide">CGM</th>
+              <th className="text-center py-1.5 px-1 text-[10px] font-semibold text-amber-500 uppercase tracking-wide">FS</th>
               <th className="text-center py-1.5 px-1 text-[10px] font-semibold text-slate-500 uppercase tracking-wide">Carbs</th>
               <th className="text-center py-1.5 px-1 text-[10px] font-semibold text-slate-500 uppercase tracking-wide">Calc</th>
               <th className="text-center py-1.5 px-1 text-[10px] font-semibold text-slate-500 uppercase tracking-wide">Given</th>
@@ -110,7 +110,10 @@ function HourlyFlowTable({ readings, events, targetLow, targetHigh, isPump }) {
           <tbody>
             {activeSlots.map((slot, i) => {
               const c = slotMap[slot.id];
-              const bg = bgRange(c.bgs, targetLow, targetHigh);
+              const cgmVals = c.bgs.filter(b =>  b.cgm).map(b => b.val);
+              const fsVals  = c.bgs.filter(b => !b.cgm).map(b => b.val);
+              const cgm  = bgInfo(cgmVals, targetLow, targetHigh);
+              const fs   = bgInfo(fsVals,  targetLow, targetHigh);
               const carbs   = fmtNums(c.carbs);
               const calc    = fmtNums(c.calcDose);
               const given   = fmtNums(c.doseGiven);
@@ -121,7 +124,12 @@ function HourlyFlowTable({ readings, events, targetLow, targetHigh, isPump }) {
                 <tr key={slot.id} className={isEven ? 'bg-white' : 'bg-slate-50/60'}>
                   <td className="py-1.5 px-2 font-semibold text-slate-600 tabular-nums">{slot.label}</td>
                   <td className="py-1.5 px-1 text-center">
-                    {bg ? <span className={`font-semibold tabular-nums ${bg.color}`}>{bg.label}</span> : <span className="text-slate-200">—</span>}
+                    {cgm ? <span className={`font-semibold tabular-nums italic ${cgm.color}`}>{cgm.label}</span> : <span className="text-slate-200">—</span>}
+                  </td>
+                  <td className="py-1.5 px-1 text-center">
+                    {fs ? (
+                      <span className="inline-block bg-amber-50 border border-amber-300 text-amber-800 font-bold tabular-nums px-1 rounded text-[11px]">{fs.label}</span>
+                    ) : <span className="text-slate-200">—</span>}
                   </td>
                   <td className="py-1.5 px-1 text-center">
                     {carbs ? <span className="font-semibold text-orange-500 tabular-nums">{carbs}g</span> : <span className="text-slate-200">—</span>}
