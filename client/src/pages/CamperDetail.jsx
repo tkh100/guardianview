@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, RefreshCw, Wifi, WifiOff, Trash2, Pill, Check, ChevronLeft, ChevronRight, Printer, Download } from 'lucide-react';
+import { ArrowLeft, RefreshCw, Wifi, WifiOff, Trash2, Pill, Check, ChevronLeft, ChevronRight, Printer, Download, Activity, Droplets, TrendingUp, BarChart2 } from 'lucide-react';
 import { api } from '../api';
 import GlucoseIndicator, { getGlucoseStatus, STATUS_STYLES } from '../components/GlucoseIndicator';
 import GlucoseChart from '../components/GlucoseChart';
@@ -147,6 +147,91 @@ function EventRow({ event, onDelete, showDate }) {
   );
 }
 
+// Zone config for 5-zone TIR bar
+const ZONES = [
+  { key: 'veryHigh', label: '>250',    color: '#b91c1c', textColor: 'text-red-700' },
+  { key: 'high',     label: 'High',    color: '#eab308', textColor: 'text-yellow-600' },
+  { key: 'inRange',  label: 'In Range',color: '#16a34a', textColor: 'text-emerald-700' },
+  { key: 'low',      label: 'Low',     color: '#f97316', textColor: 'text-orange-500' },
+  { key: 'veryLow',  label: '<54',     color: '#7f1d1d', textColor: 'text-red-900' },
+];
+
+function MiniSparkline({ readings, targetLow, targetHigh }) {
+  if (!readings || readings.length < 2) {
+    return <div className="h-14 flex items-center justify-center text-xs text-slate-300">No data</div>;
+  }
+  const sorted = [...readings].sort((a, b) => new Date(a.reading_time) - new Date(b.reading_time));
+  const W = 200, H = 56;
+  const minT = new Date(sorted[0].reading_time).getTime();
+  const maxT = new Date(sorted[sorted.length - 1].reading_time).getTime();
+  const minV = 40, maxV = 350;
+  const px = t => maxT > minT ? ((t - minT) / (maxT - minT)) * W : W / 2;
+  const py = v => H - ((Math.min(Math.max(v, minV), maxV) - minV) / (maxV - minV)) * H;
+  const rY1 = py(targetHigh);
+  const rY2 = py(targetLow);
+  const points = sorted.map(r => `${px(new Date(r.reading_time).getTime())},${py(r.value)}`).join(' ');
+  const lastVal = sorted[sorted.length - 1].value;
+  const lineColor = lastVal < 54 || lastVal > 300 ? '#f43f5e' : lastVal < targetLow || lastVal > targetHigh ? '#f59e0b' : '#10b981';
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ height: 56 }} preserveAspectRatio="none">
+      <rect x={0} y={rY1} width={W} height={Math.max(0, rY2 - rY1)} fill="#10b981" fillOpacity={0.12} />
+      <line x1={0} y1={rY1} x2={W} y2={rY1} stroke="#10b981" strokeWidth={0.6} strokeDasharray="3 2" />
+      <line x1={0} y1={rY2} x2={W} y2={rY2} stroke="#10b981" strokeWidth={0.6} strokeDasharray="3 2" />
+      <polyline points={points} fill="none" stroke={lineColor} strokeWidth={1.5} strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function DayCard({ day, readings, events, camper, onSelect, selected }) {
+  const total = readings.length;
+  const inRange = readings.filter(r => r.value >= camper.target_low && r.value <= camper.target_high).length;
+  const low = readings.filter(r => r.value < camper.target_low).length;
+  const high = readings.filter(r => r.value > camper.target_high).length;
+  const tirPct = total ? Math.round((inRange / total) * 100) : null;
+  const avg = total ? Math.round(readings.reduce((s, r) => s + r.value, 0) / total) : null;
+  const totalCarbs = events.filter(e => e.carbs_g > 0).reduce((s, e) => s + (e.carbs_g || 0), 0);
+  const totalInsulin = events.filter(e => (e.dose_given || e.insulin_units) > 0).reduce((s, e) => s + (e.dose_given || e.insulin_units || 0), 0);
+  const dateLabel = new Date(day + 'T12:00:00').toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' });
+  const tirColor = tirPct >= 70 ? 'bg-emerald-100 text-emerald-700' : tirPct >= 50 ? 'bg-amber-100 text-amber-700' : 'bg-rose-100 text-rose-700';
+  return (
+    <button
+      onClick={() => onSelect(day)}
+      className={`text-left rounded-xl border p-3 transition-all w-full ${selected ? 'border-blue-400 bg-blue-50 ring-2 ring-blue-200' : 'border-slate-200 bg-white hover:border-slate-300 hover:shadow-sm'}`}
+    >
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-sm font-semibold text-slate-700">{dateLabel}</span>
+        {tirPct !== null && (
+          <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${tirColor}`}>{tirPct}%</span>
+        )}
+      </div>
+      <div className="rounded-lg overflow-hidden bg-slate-50 mb-2.5">
+        <MiniSparkline readings={readings} targetLow={camper.target_low} targetHigh={camper.target_high} />
+      </div>
+      <div className="grid grid-cols-4 gap-1 text-center">
+        <div>
+          <div className="text-xs font-bold text-slate-700">{avg ?? '–'}</div>
+          <div className="text-[10px] text-slate-400">Avg</div>
+        </div>
+        <div>
+          <div className="text-xs font-bold text-rose-500">{low}</div>
+          <div className="text-[10px] text-slate-400">Lows</div>
+        </div>
+        <div>
+          <div className="text-xs font-bold text-amber-500">{high}</div>
+          <div className="text-[10px] text-slate-400">Highs</div>
+        </div>
+        <div>
+          <div className="text-xs font-bold text-orange-500">{totalCarbs > 0 ? `${totalCarbs}g` : '–'}</div>
+          <div className="text-[10px] text-slate-400">Carbs</div>
+        </div>
+      </div>
+      {totalInsulin > 0 && (
+        <div className="mt-1.5 text-[10px] text-slate-400 text-center">{totalInsulin.toFixed(1)}u insulin</div>
+      )}
+    </button>
+  );
+}
+
 export default function CamperDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -198,6 +283,27 @@ export default function CamperDetail() {
     if (viewMode !== 'daily') return [];
     return [...new Set(readings.map(r => toLocalDate(r.reading_time)))].sort();
   }, [readings, viewMode]);
+
+  // Group readings/events by day for daily grid
+  const dayReadings = useMemo(() => {
+    if (viewMode !== 'daily') return {};
+    return readings.reduce((acc, r) => {
+      const day = toLocalDate(r.reading_time);
+      if (!acc[day]) acc[day] = [];
+      acc[day].push(r);
+      return acc;
+    }, {});
+  }, [readings, viewMode]);
+
+  const dayEvents = useMemo(() => {
+    if (viewMode !== 'daily') return {};
+    return events.reduce((acc, e) => {
+      const day = toLocalDate(e.created_at);
+      if (!acc[day]) acc[day] = [];
+      acc[day].push(e);
+      return acc;
+    }, {});
+  }, [events, viewMode]);
 
   // Filter readings/events for display
   const displayedReadings = (viewMode === 'daily' && selectedDay)
@@ -369,12 +475,33 @@ export default function CamperDetail() {
   const status = getGlucoseStatus(camper.latest_value, camper.target_low, camper.target_high);
   const styles = STATUS_STYLES[status];
 
-  // Time-in-range stats
+  // Full CGM stats
   const total = displayedReadings.length;
-  const inRange = displayedReadings.filter(r => r.value >= camper.target_low && r.value <= camper.target_high).length;
-  const low = displayedReadings.filter(r => r.value < camper.target_low).length;
-  const high = displayedReadings.filter(r => r.value > camper.target_high).length;
-  const tir = total ? Math.round((inRange / total) * 100) : null;
+  const veryLowCount  = displayedReadings.filter(r => r.value < 54).length;
+  const lowCount      = displayedReadings.filter(r => r.value >= 54 && r.value < camper.target_low).length;
+  const inRange       = displayedReadings.filter(r => r.value >= camper.target_low && r.value <= camper.target_high).length;
+  const highCount     = displayedReadings.filter(r => r.value > camper.target_high && r.value <= 250).length;
+  const veryHighCount = displayedReadings.filter(r => r.value > 250).length;
+  const low  = veryLowCount + lowCount;
+  const high = highCount + veryHighCount;
+  const tir  = total ? Math.round((inRange / total) * 100) : null;
+
+  const veryLowPct  = total ? Math.round((veryLowCount / total) * 100) : 0;
+  const lowPct      = total ? Math.round((lowCount / total) * 100) : 0;
+  const inRangePct  = total ? Math.round((inRange / total) * 100) : 0;
+  const highPct     = total ? Math.round((highCount / total) * 100) : 0;
+  const veryHighPct = total ? Math.round((veryHighCount / total) * 100) : 0;
+
+  const avgGlucose = total ? Math.round(displayedReadings.reduce((s, r) => s + r.value, 0) / total) : 0;
+  const stdDev = total && avgGlucose
+    ? Math.round(Math.sqrt(displayedReadings.reduce((s, r) => s + Math.pow(r.value - avgGlucose, 2), 0) / total))
+    : 0;
+  const gmi = avgGlucose ? (3.31 + 0.02392 * avgGlucose).toFixed(1) : '--';
+  const cv  = avgGlucose ? Math.round((stdDev / avgGlucose) * 100) : '--';
+
+  const totalCarbsLogged = displayedEvents.filter(e => e.carbs_g > 0).reduce((s, e) => s + (e.carbs_g || 0), 0);
+  const totalInsulinGiven = displayedEvents.filter(e => (e.dose_given || e.insulin_units) > 0)
+    .reduce((s, e) => s + (e.dose_given || e.insulin_units || 0), 0);
 
   return (
     <div className="max-w-3xl mx-auto p-4 md:p-6">
@@ -518,6 +645,99 @@ export default function CamperDetail() {
         </button>
       </div>
 
+      {/* CGM Clinical Summary */}
+      {total > 0 && (
+        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 md:p-5 mb-4">
+          {/* Header */}
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <Activity size={16} className="text-slate-400" />
+              <h2 className="font-semibold text-slate-700">CGM Summary</h2>
+            </div>
+            <span className="text-xs text-slate-400 bg-slate-50 px-2 py-0.5 rounded-full">{total} readings · {currentViewLabel}</span>
+          </div>
+
+          {/* TIR + 5-zone bar */}
+          <div className="flex gap-5 items-center mb-5">
+            {/* Big TIR number */}
+            <div className="text-center shrink-0 w-20">
+              <div className={`text-5xl font-black leading-none ${inRangePct >= 70 ? 'text-emerald-600' : inRangePct >= 50 ? 'text-amber-500' : 'text-rose-600'}`}>
+                {inRangePct}%
+              </div>
+              <div className="text-[10px] text-slate-500 mt-1.5 uppercase tracking-wide font-medium">Time in Range</div>
+              <div className="text-[10px] text-slate-400">{camper.target_low}–{camper.target_high} mg/dL</div>
+            </div>
+
+            {/* 5-zone stacked bar + labels */}
+            <div className="flex-1">
+              <div className="flex h-7 rounded-lg overflow-hidden shadow-inner bg-slate-100 mb-2">
+                {veryHighPct > 0 && <div style={{ width: `${veryHighPct}%`, background: '#b91c1c' }} title={`Very High >250: ${veryHighPct}%`} />}
+                {highPct > 0     && <div style={{ width: `${highPct}%`, background: '#eab308' }}     title={`High ${camper.target_high+1}–250: ${highPct}%`} />}
+                {inRangePct > 0  && <div style={{ width: `${inRangePct}%`, background: '#16a34a' }}  title={`In Range ${camper.target_low}–${camper.target_high}: ${inRangePct}%`} />}
+                {lowPct > 0      && <div style={{ width: `${lowPct}%`, background: '#f97316' }}      title={`Low 54–${camper.target_low-1}: ${lowPct}%`} />}
+                {veryLowPct > 0  && <div style={{ width: `${veryLowPct}%`, background: '#7f1d1d' }}  title={`Very Low <54: ${veryLowPct}%`} />}
+              </div>
+              <div className="grid grid-cols-5 text-center gap-px">
+                <div>
+                  <div className="text-xs font-bold text-red-800">{veryHighPct}%</div>
+                  <div className="text-[9px] text-slate-400">&gt;250</div>
+                </div>
+                <div>
+                  <div className="text-xs font-bold text-yellow-600">{highPct}%</div>
+                  <div className="text-[9px] text-slate-400">High</div>
+                </div>
+                <div>
+                  <div className="text-xs font-bold text-emerald-700">{inRangePct}%</div>
+                  <div className="text-[9px] text-slate-400">In Range</div>
+                </div>
+                <div>
+                  <div className="text-xs font-bold text-orange-500">{lowPct}%</div>
+                  <div className="text-[9px] text-slate-400">Low</div>
+                </div>
+                <div>
+                  <div className="text-xs font-bold text-red-900">{veryLowPct}%</div>
+                  <div className="text-[9px] text-slate-400">&lt;54</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Stats grid */}
+          <div className="grid grid-cols-3 md:grid-cols-6 gap-3 pt-4 border-t border-slate-100">
+            <div className="text-center">
+              <div className="text-xl font-black text-slate-800">{avgGlucose}</div>
+              <div className="text-[9px] uppercase tracking-wide text-slate-400 mt-0.5">Avg Glucose</div>
+              <div className="text-[9px] text-slate-300">mg/dL</div>
+            </div>
+            <div className="text-center">
+              <div className="text-xl font-black text-slate-800">{gmi}%</div>
+              <div className="text-[9px] uppercase tracking-wide text-slate-400 mt-0.5">GMI</div>
+              <div className="text-[9px] text-slate-300">est. A1c</div>
+            </div>
+            <div className="text-center">
+              <div className={`text-xl font-black ${typeof cv === 'number' && cv <= 36 ? 'text-emerald-600' : 'text-amber-500'}`}>{cv}%</div>
+              <div className="text-[9px] uppercase tracking-wide text-slate-400 mt-0.5">CV</div>
+              <div className="text-[9px] text-slate-300">variability</div>
+            </div>
+            <div className="text-center">
+              <div className="text-xl font-black text-slate-800">±{stdDev}</div>
+              <div className="text-[9px] uppercase tracking-wide text-slate-400 mt-0.5">Std Dev</div>
+              <div className="text-[9px] text-slate-300">mg/dL</div>
+            </div>
+            <div className="text-center">
+              <div className="text-xl font-black text-orange-500">{totalCarbsLogged > 0 ? `${totalCarbsLogged}g` : '—'}</div>
+              <div className="text-[9px] uppercase tracking-wide text-slate-400 mt-0.5">Carbs</div>
+              <div className="text-[9px] text-slate-300">logged</div>
+            </div>
+            <div className="text-center">
+              <div className="text-xl font-black text-blue-500">{totalInsulinGiven > 0 ? `${totalInsulinGiven.toFixed(1)}u` : '—'}</div>
+              <div className="text-[9px] uppercase tracking-wide text-slate-400 mt-0.5">Insulin</div>
+              <div className="text-[9px] text-slate-300">given</div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Chart */}
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 md:p-5 mb-4">
         <div className="flex items-center justify-between mb-3">
@@ -555,26 +775,26 @@ export default function CamperDetail() {
         <GlucoseChart readings={displayedReadings} events={displayedEvents} targetLow={camper.target_low} targetHigh={camper.target_high} />
       </div>
 
-      {/* Time in range stats */}
-      {total > 0 && (
-        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 md:p-5 mb-4">
-          <h2 className="font-semibold text-slate-700 mb-4">Time in Range ({currentViewLabel})</h2>
-          <div className="grid grid-cols-3 gap-4 text-center">
-            <div>
-              <p className="text-2xl font-bold text-emerald-600">{tir}%</p>
-              <p className="text-xs text-slate-500 mt-0.5">In Range</p>
-              <p className="text-xs text-slate-400">{camper.target_low}-{camper.target_high}</p>
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-amber-600">{total ? Math.round((low / total) * 100) : 0}%</p>
-              <p className="text-xs text-slate-500 mt-0.5">Below Range</p>
-              <p className="text-xs text-slate-400">&lt; {camper.target_low}</p>
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-amber-600">{total ? Math.round((high / total) * 100) : 0}%</p>
-              <p className="text-xs text-slate-500 mt-0.5">Above Range</p>
-              <p className="text-xs text-slate-400">&gt; {camper.target_high}</p>
-            </div>
+      {/* Daily Breakdown Grid */}
+      {viewMode === 'daily' && availableDays.length > 0 && (
+        <div className="mb-4">
+          <div className="flex items-center gap-2 mb-3">
+            <BarChart2 size={16} className="text-slate-400" />
+            <h2 className="font-semibold text-slate-700">Daily Breakdown</h2>
+            <span className="text-xs text-slate-400 bg-slate-50 px-2 py-0.5 rounded-full ml-auto">{availableDays.length} days</span>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            {availableDays.slice().reverse().map(day => (
+              <DayCard
+                key={day}
+                day={day}
+                readings={dayReadings[day] || []}
+                events={dayEvents[day] || []}
+                camper={camper}
+                onSelect={setSelectedDay}
+                selected={selectedDay === day}
+              />
+            ))}
           </div>
         </div>
       )}
