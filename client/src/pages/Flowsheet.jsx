@@ -393,7 +393,7 @@ function CamperDetailModal({ camper: initialCamper, date: initialDate, onClose }
     });
   }
 
-  const isToday = modalDate >= todayUTC;
+  const isToday = modalDate >= todayUTC();
 
   const { readings, events } = camper;
   const values = readings.map(r => r.value);
@@ -437,8 +437,8 @@ function CamperDetailModal({ camper: initialCamper, date: initialDate, onClose }
       <div className="bg-white w-full sm:max-w-2xl rounded-t-2xl sm:rounded-2xl shadow-xl flex flex-col max-h-[92vh]">
 
         {/* Header */}
-        <div className="px-5 py-4 border-b border-slate-100 shrink-0">
-          <div className="flex items-center justify-between">
+        <div className="shrink-0">
+          <div className="flex items-center justify-between px-5 pt-4 pb-2">
             <div>
               <p className="font-bold text-slate-800 text-lg leading-tight">{camper.name}</p>
               <div className="flex items-center gap-2 mt-0.5">
@@ -453,7 +453,7 @@ function CamperDetailModal({ camper: initialCamper, date: initialDate, onClose }
             </button>
           </div>
           {/* Day navigation */}
-          <div className="flex items-center justify-between mt-3">
+          <div className="flex items-center justify-between px-3 pb-3 border-b border-slate-100">
             <button onClick={() => shiftDay(-1)} className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium text-slate-500 hover:bg-slate-100 transition-colors">
               <ChevronLeft size={14} /> Prev
             </button>

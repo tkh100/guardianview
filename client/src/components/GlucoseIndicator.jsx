@@ -37,12 +37,14 @@ export default function GlucoseIndicator({ value, trend, targetLow, targetHigh, 
   };
 
   return (
-    <div className={`flex items-baseline gap-1 ${styles.text}`}>
-      <span className={sizes[size]}>
-        {value ?? '--'}
-      </span>
-      {value && <span className="text-lg">{arrow}</span>}
-      {size !== 'sm' && <span className="text-xs text-slate-500 ml-1">mg/dL</span>}
+    <div>
+      <div className={`flex items-baseline gap-1 ${styles.text}`}>
+        <span className={sizes[size]}>
+          {value ?? '--'}
+        </span>
+        {value && <span className="text-lg">{arrow}</span>}
+      </div>
+      {size !== 'sm' && <div className="text-xs text-slate-500 mt-0.5">mg/dL</div>}
     </div>
   );
 }
