@@ -1,6 +1,6 @@
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
-  ResponsiveContainer, ReferenceLine, Customized,
+  ResponsiveContainer, ReferenceLine, ReferenceArea, Customized,
 } from 'recharts';
 
 function formatTimeOnly(ts) {
@@ -159,9 +159,11 @@ export default function GlucoseChart({ readings, events = [], targetLow = 70, ta
           />
           <Tooltip content={<CustomTooltip />} />
 
-          {/* Target range */}
-          <ReferenceLine y={targetHigh} stroke="#f59e0b" strokeDasharray="4 2" strokeWidth={1} />
-          <ReferenceLine y={targetLow}  stroke="#f59e0b" strokeDasharray="4 2" strokeWidth={1} />
+          {/* Target range band */}
+          <ReferenceArea y1={targetLow} y2={targetHigh} fill="#10b981" fillOpacity={0.08} />
+          {/* Target range lines */}
+          <ReferenceLine y={targetHigh} stroke="#10b981" strokeDasharray="4 2" strokeWidth={1} />
+          <ReferenceLine y={targetLow}  stroke="#10b981" strokeDasharray="4 2" strokeWidth={1} />
           <ReferenceLine y={55}         stroke="#f43f5e" strokeDasharray="4 2" strokeWidth={1} />
 
           {/* Event time markers — vertical lines only, no text (badges handle labels) */}
