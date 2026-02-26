@@ -368,11 +368,37 @@ function EventRow({ event }) {
 
 // ─── CamperDetailModal ───────────────────────────────────────────────────────
 
-function CamperDetailModal({ camper, date, onClose }) {
+function CamperDetailModal({ camper: initialCamper, date: initialDate, onClose }) {
+  const [modalDate, setModalDate] = useState(initialDate);
+  const [camper, setCamper]       = useState(initialCamper);
+  const [navLoading, setNavLoading] = useState(false);
+
+  useEffect(() => {
+    if (modalDate === initialDate) { setCamper(initialCamper); return; }
+    setNavLoading(true);
+    api.getFlowsheet(modalDate)
+      .then(data => {
+        const found = data.find(c => c.id === initialCamper.id);
+        setCamper(found || { ...initialCamper, readings: [], events: [] });
+      })
+      .catch(() => setCamper({ ...initialCamper, readings: [], events: [] }))
+      .finally(() => setNavLoading(false));
+  }, [modalDate]);
+
+  function shiftDay(delta) {
+    setModalDate(d => {
+      const dt = new Date(d + 'T00:00:00Z');
+      dt.setUTCDate(dt.getUTCDate() + delta);
+      return dt.toISOString().slice(0, 10);
+    });
+  }
+
+  const isToday = modalDate >= todayUTC;
+
   const { readings, events } = camper;
   const values = readings.map(r => r.value);
 
-  const dayStart = Date.UTC(...date.split('-').map((v, i) => i === 1 ? +v - 1 : +v));
+  const dayStart = Date.UTC(...modalDate.split('-').map((v, i) => i === 1 ? +v - 1 : +v));
   const dayEnd   = dayStart + 86400000;
 
   const chartData = readings.map(r => ({
@@ -411,19 +437,36 @@ function CamperDetailModal({ camper, date, onClose }) {
       <div className="bg-white w-full sm:max-w-2xl rounded-t-2xl sm:rounded-2xl shadow-xl flex flex-col max-h-[92vh]">
 
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 shrink-0">
-          <div>
-            <p className="font-bold text-slate-800 text-lg leading-tight">{camper.name}</p>
-            <div className="flex items-center gap-2 mt-0.5">
-              {camper.cabin_group && <span className="text-xs text-slate-500">{camper.cabin_group}</span>}
-              <span className={`text-xs px-1.5 py-0.5 rounded font-medium ${
-                camper.delivery_method === 'pump' ? 'bg-blue-50 text-blue-600' : 'bg-violet-50 text-violet-600'
-              }`}>{camper.delivery_method}</span>
+        <div className="px-5 py-4 border-b border-slate-100 shrink-0">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="font-bold text-slate-800 text-lg leading-tight">{camper.name}</p>
+              <div className="flex items-center gap-2 mt-0.5">
+                {camper.cabin_group && <span className="text-xs text-slate-500">{camper.cabin_group}</span>}
+                <span className={`text-xs px-1.5 py-0.5 rounded font-medium ${
+                  camper.delivery_method === 'pump' ? 'bg-blue-50 text-blue-600' : 'bg-violet-50 text-violet-600'
+                }`}>{camper.delivery_method}</span>
+              </div>
             </div>
+            <button onClick={onClose} className="p-2 text-slate-400 hover:text-slate-700 rounded-lg hover:bg-slate-100 transition-colors">
+              <X size={20} />
+            </button>
           </div>
-          <button onClick={onClose} className="p-2 text-slate-400 hover:text-slate-700 rounded-lg hover:bg-slate-100 transition-colors">
-            <X size={20} />
-          </button>
+          {/* Day navigation */}
+          <div className="flex items-center justify-between mt-3">
+            <button onClick={() => shiftDay(-1)} className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium text-slate-500 hover:bg-slate-100 transition-colors">
+              <ChevronLeft size={14} /> Prev
+            </button>
+            <div className="flex items-center gap-2">
+              {navLoading && <span className="w-3 h-3 border-2 border-slate-300 border-t-slate-500 rounded-full animate-spin" />}
+              <span className="text-sm font-semibold text-slate-700 tabular-nums">
+                {new Date(modalDate + 'T00:00:00Z').toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' })}
+              </span>
+            </div>
+            <button onClick={() => shiftDay(1)} disabled={isToday} className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium text-slate-500 hover:bg-slate-100 transition-colors disabled:opacity-30 disabled:cursor-not-allowed">
+              Next <ChevronRight size={14} />
+            </button>
+          </div>
         </div>
 
         {/* Chart */}
