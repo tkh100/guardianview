@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, RefreshCw, Wifi, WifiOff, Trash2, Pill, Check, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ArrowLeft, RefreshCw, Wifi, WifiOff, Trash2, Pill, Check, ChevronLeft, ChevronRight, Printer } from 'lucide-react';
 import { api } from '../api';
 import GlucoseIndicator, { getGlucoseStatus, STATUS_STYLES } from '../components/GlucoseIndicator';
 import GlucoseChart from '../components/GlucoseChart';
@@ -388,6 +388,22 @@ export default function CamperDetail() {
               className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800 disabled:opacity-40 transition-colors py-1 px-2 rounded-lg">
               <RefreshCw size={14} className={syncing ? 'animate-spin' : ''} />
               {syncing ? 'Syncing...' : 'Sync'}
+            </button>
+            <button
+              onClick={() => {
+                // Default to most recent Saturday as week start
+                const today = new Date();
+                const day = today.getDay();
+                const diffToSat = day >= 6 ? 0 : day + 1;
+                today.setDate(today.getDate() - diffToSat);
+                const weekStart = today.toISOString().slice(0, 10);
+                window.open(`/campers/${id}/print-flowsheet?week_start=${weekStart}`, '_blank');
+              }}
+              className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800 transition-colors py-1 px-2 rounded-lg"
+              title="Print weekly flowsheet"
+            >
+              <Printer size={14} />
+              Print
             </button>
           </div>
         </div>

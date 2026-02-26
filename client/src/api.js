@@ -65,4 +65,5 @@ export const api = {
   runSync: () => request('POST', '/sync/run'),
 
   getFlowsheet: (date) => request('GET', `/flowsheet?date=${date}`),
+  getPrintFlowsheet: (id, weekStart) => request('GET', `/campers/${id}/print-flowsheet${weekStart ? `?week_start=${weekStart}` : ''}`),
 };
