@@ -54,7 +54,7 @@ function buildSlotMap(events, readings, slots) {
 
   // Initialize
   slots.forEach(s => {
-    map[s.id] = { bgs: [], ketones: [], carbs: [], calcDose: [], doseGiven: [], siteChange: false, longActing: false, prebolus: false, notes: [] };
+    map[s.id] = { bgs: [], ketones: [], carbs: [], calcDose: [], doseGiven: [], basalRate: [], siteChange: false, longActing: false, prebolus: false, notes: [] };
   });
 
   // Helper: which slot does an hour fall into?
@@ -80,6 +80,7 @@ function buildSlotMap(events, readings, slots) {
     if (ev.carbs_g != null)   cell.carbs.push(ev.carbs_g);
     if (ev.calc_dose != null) cell.calcDose.push(ev.calc_dose);
     if (ev.dose_given != null) cell.doseGiven.push(ev.dose_given);
+    if (ev.basal_rate != null) cell.basalRate.push(ev.basal_rate);
     if (ev.site_change)       cell.siteChange = true;
     if (ev.long_acting_given) cell.longActing = true;
     if (ev.prebolus)          cell.prebolus = true;
@@ -113,12 +114,13 @@ function DayGrid({ label, slots, slotMap, isPump, showRegCol = false, showLongAc
     { key: 'carbs',    label: 'Carbohydrates' },
     { key: 'calcDose', label: 'Calculated dose' },
     { key: 'doseGiven',label: 'Dose given' },
+    isPump ? { key: 'basalRate', label: 'Basal rate (u/hr)' } : null,
     { key: 'site',     label: 'Site change' },
     isPump
       ? { key: 'prebolus',  label: 'Prebolus given?' }
       : { key: 'longActing',label: 'Long acting given' },
     { key: 'notes',    label: 'Extra notes' },
-  ];
+  ].filter(Boolean);
 
   function cellValue(slotId, rowKey) {
     if (!slotMap) return '';
@@ -129,8 +131,9 @@ function DayGrid({ label, slots, slotMap, isPump, showRegCol = false, showLongAc
       case 'ketones':   return fmtNums(cell.ketones);
       case 'carbs':     return fmtNums(cell.carbs);
       case 'calcDose':  return fmtNums(cell.calcDose);
-      case 'doseGiven': return fmtNums(cell.doseGiven);
-      case 'site':      return cell.siteChange ? '✓' : '';
+      case 'doseGiven':  return fmtNums(cell.doseGiven);
+      case 'basalRate':  return fmtNums(cell.basalRate);
+      case 'site':       return cell.siteChange ? '✓' : '';
       case 'longActing':return cell.longActing ? '✓' : '';
       case 'prebolus':  return cell.prebolus ? '✓' : '';
       case 'notes':     return cell.notes.join('; ');

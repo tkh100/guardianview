@@ -23,12 +23,12 @@ router.post('/', requireAuth, (req, res) => {
     carbs_g, insulin_units, note,
     bg_manual, ketones, calc_dose, dose_given,
     site_change, prebolus, long_acting_given,
-    meal_type, med_slot, event_time,
+    meal_type, med_slot, event_time, basal_rate,
   } = req.body;
 
   const hasData = carbs_g || insulin_units || calc_dose || dose_given ||
     bg_manual || ketones || note || site_change || prebolus ||
-    long_acting_given || meal_type || med_slot;
+    long_acting_given || meal_type || med_slot || basal_rate;
   if (!hasData) {
     return res.status(400).json({ error: 'At least one field required' });
   }
@@ -52,8 +52,8 @@ router.post('/', requireAuth, (req, res) => {
       camper_id, carbs_g, insulin_units, note, created_by,
       bg_manual, ketones, calc_dose, dose_given,
       site_change, prebolus, long_acting_given,
-      meal_type, med_slot, created_at, logged_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, COALESCE(?, CURRENT_TIMESTAMP), CURRENT_TIMESTAMP)
+      meal_type, med_slot, basal_rate, created_at, logged_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, COALESCE(?, CURRENT_TIMESTAMP), CURRENT_TIMESTAMP)
   `).run(
     req.params.id,
     carbs_g ? parseInt(carbs_g) : null,
@@ -69,6 +69,7 @@ router.post('/', requireAuth, (req, res) => {
     long_acting_given ? 1 : 0,
     meal_type || null,
     med_slot || null,
+    basal_rate ? parseFloat(basal_rate) : null,
     created_at,
   );
 

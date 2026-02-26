@@ -106,6 +106,11 @@ function EventRow({ event, onDelete, showDate }) {
               calc {event.calc_dose}u
             </span>
           )}
+          {event.basal_rate > 0 && (
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-700">
+              {event.basal_rate}u/hr basal
+            </span>
+          )}
           {!!event.site_change && (
             <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700">
               Site change
@@ -169,6 +174,7 @@ export default function CamperDetail() {
   const [siteChange, setSiteChange] = useState(false);
   const [prebolus, setPrebolus] = useState(false);
   const [longActingGiven, setLongActingGiven] = useState(false);
+  const [basalRate, setBasalRate] = useState('');
   const [note, setNote] = useState('');
   const [mealType, setMealType] = useState(null);
   const [logging, setLogging] = useState(false);
@@ -298,7 +304,7 @@ export default function CamperDetail() {
 
   async function handleLog(e) {
     e.preventDefault();
-    const hasData = bgManual || ketones || carbs || calcDose || doseGiven || siteChange || prebolus || longActingGiven || note.trim() || mealType;
+    const hasData = bgManual || ketones || carbs || calcDose || doseGiven || siteChange || prebolus || longActingGiven || basalRate || note.trim() || mealType;
     if (!hasData) return;
     setLogging(true);
     try {
@@ -311,6 +317,7 @@ export default function CamperDetail() {
         site_change: siteChange || false,
         prebolus: prebolus || false,
         long_acting_given: longActingGiven || false,
+        basal_rate: basalRate ? parseFloat(basalRate) : null,
         note: note.trim() || null,
         meal_type: mealType || null,
         event_time: eventTime ? new Date(eventTime).toISOString() : null,
@@ -331,7 +338,7 @@ export default function CamperDetail() {
   function resetForm() {
     setBgManual(''); setKetones(''); setCarbs(''); setCalcDose('');
     setDoseGiven(''); setSiteChange(false); setPrebolus(false);
-    setLongActingGiven(false); setNote(''); setMealType(null); setEventTime('');
+    setLongActingGiven(false); setBasalRate(''); setNote(''); setMealType(null); setEventTime('');
   }
 
   async function handleDeleteEvent(eventId) {
@@ -662,6 +669,13 @@ export default function CamperDetail() {
                     placeholder="0.0" className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
                 </div>
               </div>
+              {isPump && (
+                <div>
+                  <label className="text-xs text-slate-500 mb-1 block">Basal Rate (u/hr)</label>
+                  <input type="number" min="0" max="10" step="0.025" value={basalRate} onChange={e => setBasalRate(e.target.value)}
+                    placeholder="e.g. 0.65" className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                </div>
+              )}
               <div>
                 <label className="text-xs text-slate-500 mb-1 block">
                   Time <span className="font-normal text-slate-400">(leave blank for now)</span>
@@ -699,7 +713,7 @@ export default function CamperDetail() {
             <input type="text" value={note} onChange={e => setNote(e.target.value)} placeholder="Medical note (staff only)" maxLength={200}
               className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
           )}
-          <button type="submit" disabled={logging || (!bgManual && !ketones && !carbs && !calcDose && !doseGiven && !siteChange && !prebolus && !longActingGiven && !note.trim() && !mealType)}
+          <button type="submit" disabled={logging || (!bgManual && !ketones && !carbs && !calcDose && !doseGiven && !siteChange && !prebolus && !longActingGiven && !basalRate && !note.trim() && !mealType)}
             className="w-full py-2.5 rounded-lg text-sm font-medium bg-slate-800 text-white hover:bg-slate-700 disabled:opacity-40 transition-colors">
             {mealType ? `Log ${MEALS.find(m => m.key === mealType)?.label || 'Meal'}` : 'Log Treatment'}
           </button>

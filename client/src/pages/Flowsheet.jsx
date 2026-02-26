@@ -149,12 +149,13 @@ function MiniChart({ readings, events, targetLow, targetHigh, date }) {
 // ─── EventRow ────────────────────────────────────────────────────────────────
 
 function EventRow({ event }) {
-  const hasCarbs    = event.carbs_g > 0;
-  const hasInsulin  = event.dose_given > 0;
-  const hasBasal    = event.long_acting_given > 0;
-  const hasSiteChg  = event.site_change;
-  const hasBG       = event.bg_manual > 0;
-  const hasKetones  = event.ketones > 0;
+  const hasCarbs     = event.carbs_g > 0;
+  const hasInsulin   = event.dose_given > 0;
+  const hasBasal     = event.long_acting_given > 0;
+  const hasSiteChg   = event.site_change;
+  const hasBG        = event.bg_manual > 0;
+  const hasKetones   = event.ketones > 0;
+  const hasBasalRate = event.basal_rate > 0;
 
   return (
     <div className="flex items-center flex-wrap gap-1 text-xs">
@@ -187,6 +188,11 @@ function EventRow({ event }) {
       {hasBasal && (
         <span className="bg-cyan-100 text-cyan-700 px-1.5 py-0.5 rounded-md font-medium">
           long acting
+        </span>
+      )}
+      {hasBasalRate && (
+        <span className="bg-indigo-100 text-indigo-700 px-1.5 py-0.5 rounded-md font-medium">
+          {event.basal_rate}u/hr
         </span>
       )}
       {hasSiteChg && (
