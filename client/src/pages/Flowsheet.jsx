@@ -7,6 +7,157 @@ import {
 import { ChevronLeft, ChevronRight, CalendarDays, X, Maximize2 } from 'lucide-react';
 import { api } from '../api';
 
+// ─── hourly slot definitions (mirrors PrintFlowsheet) ────────────────────────
+
+const ALL_SLOTS = [
+  { id: '12A', hours: [0],       label: '12a' },
+  { id: '1A',  hours: [1],       label: '1a'  },
+  { id: '2A',  hours: [2],       label: '2a'  },
+  { id: 'OVN', hours: [3,4,5,6], label: 'Ovn' },
+  { id: '7A',  hours: [7],       label: '7a'  },
+  { id: '8A',  hours: [8],       label: '8a'  },
+  { id: '9A',  hours: [9],       label: '9a'  },
+  { id: '10A', hours: [10],      label: '10a' },
+  { id: '11A', hours: [11],      label: '11a' },
+  { id: '12P', hours: [12],      label: '12p' },
+  { id: '1P',  hours: [13],      label: '1p'  },
+  { id: '2P',  hours: [14],      label: '2p'  },
+  { id: '3P',  hours: [15],      label: '3p'  },
+  { id: '4P',  hours: [16],      label: '4p'  },
+  { id: '5P',  hours: [17],      label: '5p'  },
+  { id: '6P',  hours: [18],      label: '6p'  },
+  { id: '7P',  hours: [19],      label: '7p'  },
+  { id: '8P',  hours: [20],      label: '8p'  },
+  { id: '9P',  hours: [21],      label: '9p'  },
+  { id: '10P', hours: [22],      label: '10p' },
+  { id: '11P', hours: [23],      label: '11p' },
+];
+
+function buildSlotMap(events, readings) {
+  const map = {};
+  ALL_SLOTS.forEach(s => {
+    map[s.id] = { bgs: [], ketones: [], carbs: [], calcDose: [], doseGiven: [], basalRate: [], siteChange: false, longActing: false, prebolus: false, mealType: null, medSlot: null, notes: [] };
+  });
+  function slotFor(h) { return ALL_SLOTS.find(s => s.hours.includes(h)); }
+  readings.forEach(r => {
+    const h = parseTs(r.reading_time).getHours();
+    const slot = slotFor(h);
+    if (slot) map[slot.id].bgs.push({ val: r.value, cgm: true });
+  });
+  events.forEach(ev => {
+    const h = parseTs(ev.created_at).getHours();
+    const slot = slotFor(h);
+    if (!slot) return;
+    const cell = map[slot.id];
+    if (ev.bg_manual   != null) cell.bgs.push({ val: ev.bg_manual, cgm: false });
+    if (ev.ketones     != null) cell.ketones.push(ev.ketones);
+    if (ev.carbs_g     != null) cell.carbs.push(ev.carbs_g);
+    if (ev.calc_dose   != null) cell.calcDose.push(ev.calc_dose);
+    if (ev.dose_given  != null) cell.doseGiven.push(ev.dose_given);
+    if (ev.basal_rate  != null) cell.basalRate.push(ev.basal_rate);
+    if (ev.site_change)         cell.siteChange = true;
+    if (ev.long_acting_given)   cell.longActing = true;
+    if (ev.prebolus)            cell.prebolus = true;
+    if (ev.meal_type)           cell.mealType = ev.meal_type;
+    if (ev.med_slot)            cell.medSlot = ev.med_slot;
+    if (ev.note)                cell.notes.push(ev.note);
+  });
+  return map;
+}
+
+function fmtNums(arr) {
+  if (!arr.length) return null;
+  return arr.map(v => (Number.isInteger(v) ? v : parseFloat(v.toFixed(1)))).join(', ');
+}
+
+function bgRange(bgs, targetLow, targetHigh) {
+  if (!bgs.length) return null;
+  const vals = bgs.map(b => b.val);
+  const min = Math.min(...vals), max = Math.max(...vals);
+  const hasCrit = vals.some(v => v < 55 || v > 300);
+  const hasLow  = vals.some(v => v < targetLow);
+  const hasHigh = vals.some(v => v > targetHigh);
+  const color = hasCrit ? 'text-red-600' : hasLow ? 'text-orange-500' : hasHigh ? 'text-amber-500' : 'text-emerald-600';
+  const label = min === max ? String(min) : `${min}–${max}`;
+  return { label, color };
+}
+
+function HourlyFlowTable({ readings, events, targetLow, targetHigh, isPump }) {
+  const slotMap = buildSlotMap(events, readings);
+  const activeSlots = ALL_SLOTS.filter(s => {
+    const c = slotMap[s.id];
+    return c.bgs.length || c.carbs.length || c.doseGiven.length || c.calcDose.length ||
+           c.ketones.length || c.basalRate.length || c.siteChange || c.longActing || c.prebolus || c.mealType || c.medSlot;
+  });
+  if (activeSlots.length === 0) return null;
+
+  return (
+    <div>
+      <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide mb-2">Hourly Flow</p>
+      <div className="overflow-x-auto">
+        <table className="w-full text-xs border-collapse">
+          <thead>
+            <tr className="bg-slate-50">
+              <th className="text-left py-1.5 px-2 text-[10px] font-semibold text-slate-500 uppercase tracking-wide rounded-tl-lg w-10">Time</th>
+              <th className="text-center py-1.5 px-1 text-[10px] font-semibold text-slate-500 uppercase tracking-wide">BG</th>
+              <th className="text-center py-1.5 px-1 text-[10px] font-semibold text-slate-500 uppercase tracking-wide">Carbs</th>
+              <th className="text-center py-1.5 px-1 text-[10px] font-semibold text-slate-500 uppercase tracking-wide">Calc</th>
+              <th className="text-center py-1.5 px-1 text-[10px] font-semibold text-slate-500 uppercase tracking-wide">Given</th>
+              {isPump && <th className="text-center py-1.5 px-1 text-[10px] font-semibold text-slate-500 uppercase tracking-wide">Basal</th>}
+              <th className="text-left py-1.5 px-2 text-[10px] font-semibold text-slate-500 uppercase tracking-wide rounded-tr-lg">Notes</th>
+            </tr>
+          </thead>
+          <tbody>
+            {activeSlots.map((slot, i) => {
+              const c = slotMap[slot.id];
+              const bg = bgRange(c.bgs, targetLow, targetHigh);
+              const carbs   = fmtNums(c.carbs);
+              const calc    = fmtNums(c.calcDose);
+              const given   = fmtNums(c.doseGiven);
+              const basal   = fmtNums(c.basalRate);
+              const ketones = fmtNums(c.ketones);
+              const isEven  = i % 2 === 0;
+              return (
+                <tr key={slot.id} className={isEven ? 'bg-white' : 'bg-slate-50/60'}>
+                  <td className="py-1.5 px-2 font-semibold text-slate-600 tabular-nums">{slot.label}</td>
+                  <td className="py-1.5 px-1 text-center">
+                    {bg ? <span className={`font-semibold tabular-nums ${bg.color}`}>{bg.label}</span> : <span className="text-slate-200">—</span>}
+                  </td>
+                  <td className="py-1.5 px-1 text-center">
+                    {carbs ? <span className="font-semibold text-orange-500 tabular-nums">{carbs}g</span> : <span className="text-slate-200">—</span>}
+                  </td>
+                  <td className="py-1.5 px-1 text-center">
+                    {calc ? <span className="font-medium text-blue-400 tabular-nums">{calc}u</span> : <span className="text-slate-200">—</span>}
+                  </td>
+                  <td className="py-1.5 px-1 text-center">
+                    {given ? <span className="font-semibold text-blue-600 tabular-nums">{given}u</span> : <span className="text-slate-200">—</span>}
+                  </td>
+                  {isPump && (
+                    <td className="py-1.5 px-1 text-center">
+                      {basal ? <span className="font-medium text-indigo-500 tabular-nums">{basal}</span> : <span className="text-slate-200">—</span>}
+                    </td>
+                  )}
+                  <td className="py-1.5 px-2">
+                    <div className="flex gap-1 flex-wrap">
+                      {c.mealType  && <span className="bg-violet-100 text-violet-700 px-1.5 py-0.5 rounded text-[9px] font-medium">{c.mealType}</span>}
+                      {c.medSlot   && <span className="bg-teal-100 text-teal-700 px-1.5 py-0.5 rounded text-[9px] font-medium">meds</span>}
+                      {c.siteChange && <span className="bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded text-[9px] font-medium">site chg</span>}
+                      {c.longActing && <span className="bg-cyan-100 text-cyan-700 px-1.5 py-0.5 rounded text-[9px] font-medium">long act</span>}
+                      {c.prebolus  && <span className="bg-sky-100 text-sky-700 px-1.5 py-0.5 rounded text-[9px] font-medium">prebolus</span>}
+                      {ketones     && <span className="bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded text-[9px] font-medium">ket {ketones}</span>}
+                      {c.notes.map((n, ni) => <span key={ni} className="text-slate-400 italic text-[9px]">{n}</span>)}
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
 // ─── helpers ─────────────────────────────────────────────────────────────────
 
 function todayUTC() {
@@ -349,16 +500,28 @@ function CamperDetailModal({ camper, date, onClose }) {
           </div>
         )}
 
-        {/* Events */}
-        <div className="overflow-auto flex-1 px-5 py-4">
-          <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-3">Treatment Events</p>
-          <div className="space-y-2">
-            {events.length > 0 ? (
-              events.map((e, i) => <EventRow key={i} event={e} />)
-            ) : (
-              <p className="text-xs text-slate-300">No treatment events</p>
-            )}
-          </div>
+        {/* Hourly flow table + events */}
+        <div className="overflow-auto flex-1 px-5 py-4 space-y-4">
+          {(readings.length > 0 || events.length > 0) && (
+            <HourlyFlowTable
+              readings={readings}
+              events={events}
+              targetLow={camper.target_low}
+              targetHigh={camper.target_high}
+              isPump={camper.delivery_method === 'pump'}
+            />
+          )}
+          {events.length > 0 && (
+            <div>
+              <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide mb-2">All Events</p>
+              <div className="space-y-1.5">
+                {events.map((e, i) => <EventRow key={i} event={e} />)}
+              </div>
+            </div>
+          )}
+          {events.length === 0 && readings.length === 0 && (
+            <p className="text-xs text-slate-300 text-center py-4">No data for this day</p>
+          )}
         </div>
       </div>
     </div>
@@ -508,21 +671,22 @@ function CamperDayCard({ camper, date, onSelect }) {
           </div>
         )}
 
-        {/* Event list */}
-        <div className="border-t border-slate-100 pt-2 space-y-1.5 flex-1">
-          {events.length > 0 ? (
-            <>
-              {events.slice(0, 6).map((e, i) => <EventRow key={i} event={e} />)}
-              {events.length > 6 && (
-                <button onClick={onSelect} className="text-[11px] text-blue-400 hover:text-blue-600 w-full text-center pt-0.5">
-                  +{events.length - 6} more
-                </button>
-              )}
-            </>
-          ) : (
+        {/* Hourly flow table */}
+        {(readings.length > 0 || events.length > 0) ? (
+          <div className="border-t border-slate-100 pt-2">
+            <HourlyFlowTable
+              readings={readings}
+              events={events}
+              targetLow={camper.target_low}
+              targetHigh={camper.target_high}
+              isPump={camper.delivery_method === 'pump'}
+            />
+          </div>
+        ) : (
+          <div className="border-t border-slate-100 pt-2">
             <p className="text-[11px] text-slate-300 text-center py-1">No treatment events</p>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );
