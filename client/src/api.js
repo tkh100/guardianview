@@ -67,6 +67,8 @@ export const api = {
   getFlowsheet: (date) => request('GET', `/flowsheet?date=${date}`),
   getPrintFlowsheet: (id, weekStart) => request('GET', `/campers/${id}/print-flowsheet${weekStart ? `?week_start=${weekStart}` : ''}`),
 
+  chat: (message, history) => request('POST', '/ai/chat', { message, history }),
+
   // Triggers a CSV file download matching the physical flowsheet format
   downloadFlowsheet: async (id, weekStart) => {
     const token = getToken();

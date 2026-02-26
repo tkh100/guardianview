@@ -25,6 +25,7 @@ app.use('/api/campers/:id/daily-settings', require('./routes/dailySettings'));
 app.use('/api/alerts', require('./routes/alerts'));
 app.use('/api/sync', require('./routes/syncStatus'));
 app.use('/api/flowsheet', require('./routes/flowsheet'));
+app.use('/api/ai', require('./routes/ai'));
 
 // Serve React build in production
 if (process.env.NODE_ENV === 'production') {
