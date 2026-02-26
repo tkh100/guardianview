@@ -153,6 +153,8 @@ function EventRow({ event }) {
   const hasInsulin  = event.dose_given > 0;
   const hasBasal    = event.long_acting_given > 0;
   const hasSiteChg  = event.site_change;
+  const hasBG       = event.bg_manual > 0;
+  const hasKetones  = event.ketones > 0;
 
   return (
     <div className="flex items-center flex-wrap gap-1 text-xs">
@@ -160,6 +162,16 @@ function EventRow({ event }) {
       {event.meal_type && (
         <span className="bg-violet-100 text-violet-700 px-1.5 py-0.5 rounded-md font-medium">
           {event.meal_type}
+        </span>
+      )}
+      {hasBG && (
+        <span className="bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-md font-medium">
+          BG {event.bg_manual}
+        </span>
+      )}
+      {hasKetones && (
+        <span className="bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded-md font-medium">
+          ketones {event.ketones}
         </span>
       )}
       {hasCarbs && (
@@ -174,7 +186,7 @@ function EventRow({ event }) {
       )}
       {hasBasal && (
         <span className="bg-cyan-100 text-cyan-700 px-1.5 py-0.5 rounded-md font-medium">
-          {event.long_acting_given}u basal
+          long acting
         </span>
       )}
       {hasSiteChg && (
@@ -250,7 +262,7 @@ function CamperDetailModal({ camper, date, onClose }) {
         <div className="px-2 pt-3 shrink-0">
           {readings.length > 0 ? (
             <ResponsiveContainer width="100%" height={220}>
-              <ComposedChart data={chartData} margin={{ top: 18, right: 12, bottom: 4, left: 0 }}>
+              <ComposedChart data={chartData} margin={{ top: 28, right: 12, bottom: 4, left: 0 }}>
                 <XAxis
                   dataKey="t" type="number"
                   domain={[dayStart, dayEnd]}
@@ -271,9 +283,6 @@ function CamperDetailModal({ camper, date, onClose }) {
                 <ReferenceArea y1={camper.target_low} y2={camper.target_high} fill="#22c55e" fillOpacity={0.08} />
                 <ReferenceLine y={camper.target_low}  stroke="#f59e0b" strokeWidth={1} strokeDasharray="3 3" />
                 <ReferenceLine y={camper.target_high} stroke="#f59e0b" strokeWidth={1} strokeDasharray="3 3" />
-                {carbMarkers.map(({ t }, i) => (
-                  <ReferenceLine key={`c${i}`} x={t} stroke="#f97316" strokeWidth={1.5} strokeOpacity={0.7} />
-                ))}
                 {shortActingMarkers.map(({ t, dose }, i) => (
                   <ReferenceLine key={`sa${i}`} x={t} stroke="#3b82f6" strokeWidth={1.5} strokeOpacity={0.6} strokeDasharray="3 3"
                     label={{ value: `${+parseFloat(dose).toFixed(1)}u`, position: 'insideTopRight', fill: '#3b82f6', fontSize: 10, fontWeight: 700 }}
@@ -284,6 +293,7 @@ function CamperDetailModal({ camper, date, onClose }) {
                     label={{ value: `${+parseFloat(dose).toFixed(1)}uL`, position: 'insideTopRight', fill: '#a855f7', fontSize: 10, fontWeight: 700 }}
                   />
                 ))}
+                <Customized component={(props) => <MiniBadges {...props} events={events} />} />
                 <Line type="monotone" dataKey="v" stroke={lineColor} strokeWidth={2} dot={false} isAnimationActive={false} />
               </ComposedChart>
             </ResponsiveContainer>
