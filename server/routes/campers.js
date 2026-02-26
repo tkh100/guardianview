@@ -411,7 +411,7 @@ router.get('/:id/export-flowsheet.csv', ...requireRole('admin', 'nurse'), (req, 
 
       const events = db.prepare(`
         SELECT created_at, bg_manual, ketones, carbs_g, calc_dose, dose_given,
-               site_change, long_acting_given, prebolus, note
+               site_change, long_acting_given, prebolus, basal_rate, note
         FROM camper_events WHERE camper_id=? AND created_at >= ? AND created_at < ?
         ORDER BY created_at ASC
       `).all(camperId, start, end);
@@ -591,7 +591,7 @@ router.get('/:id/print-flowsheet', ...requireRole('admin', 'nurse'), (req, res) 
 
       const events = db.prepare(`
         SELECT created_at, bg_manual, ketones, carbs_g, calc_dose, dose_given,
-               site_change, long_acting_given, prebolus, note
+               site_change, long_acting_given, prebolus, basal_rate, note
         FROM camper_events
         WHERE camper_id=? AND created_at >= ? AND created_at < ?
         ORDER BY created_at ASC

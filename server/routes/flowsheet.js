@@ -24,7 +24,7 @@ router.get('/', ...requireRole('admin', 'nurse'), (req, res) => {
     );
 
     const eventsStmt = db.prepare(
-      `SELECT created_at, carbs_g, dose_given, long_acting_given, bg_manual, ketones, meal_type, note, site_change
+      `SELECT created_at, carbs_g, dose_given, long_acting_given, bg_manual, ketones, meal_type, note, site_change, basal_rate
        FROM camper_events
        WHERE camper_id=? AND created_at >= ? AND created_at < ?
        ORDER BY created_at`

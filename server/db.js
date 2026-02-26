@@ -167,6 +167,9 @@ migrate('ALTER TABLE camper_events ADD COLUMN med_slot TEXT');
 // camper_events — audit trail: always captures the real wall-clock time of submission
 migrate('ALTER TABLE camper_events ADD COLUMN logged_at DATETIME');
 
+// camper_events — basal rate adjustment (pump only, u/hr)
+migrate('ALTER TABLE camper_events ADD COLUMN basal_rate REAL');
+
 // app_users — medical access flag
 migrate('ALTER TABLE app_users ADD COLUMN medical_access INTEGER DEFAULT 0');
 
