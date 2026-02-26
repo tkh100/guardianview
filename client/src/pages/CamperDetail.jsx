@@ -128,6 +128,11 @@ function EventRow({ event, onDelete, showDate }) {
             ? new Date(event.created_at).toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
             : formatTime(event.created_at)
           } · {event.created_by_username || 'unknown'}
+          {event.logged_at && Math.abs(new Date(event.logged_at) - new Date(event.created_at)) > 5 * 60 * 1000 && (
+            <span className="text-amber-400" title="This entry was logged after the fact">
+              {' · logged at '}{new Date(event.logged_at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}
+            </span>
+          )}
         </p>
       </div>
       <button onClick={() => onDelete(event.id)} className="text-slate-300 hover:text-rose-400 transition-colors p-1 shrink-0">

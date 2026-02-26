@@ -52,8 +52,8 @@ router.post('/', requireAuth, (req, res) => {
       camper_id, carbs_g, insulin_units, note, created_by,
       bg_manual, ketones, calc_dose, dose_given,
       site_change, prebolus, long_acting_given,
-      meal_type, med_slot, created_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, COALESCE(?, CURRENT_TIMESTAMP))
+      meal_type, med_slot, created_at, logged_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, COALESCE(?, CURRENT_TIMESTAMP), CURRENT_TIMESTAMP)
   `).run(
     req.params.id,
     carbs_g ? parseInt(carbs_g) : null,
