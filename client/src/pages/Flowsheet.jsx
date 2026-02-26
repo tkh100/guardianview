@@ -238,11 +238,14 @@ function CamperDetailModal({ camper, date, onClose }) {
   const shortActingMarkers = events.filter(e => e.dose_given > 0).map(e => ({ t: parseTs(e.created_at).getTime(), dose: e.dose_given }));
   const longActingMarkers  = events.filter(e => e.long_acting_given > 0).map(e => ({ t: parseTs(e.created_at).getTime(), dose: e.long_acting_given }));
 
-  const avg    = values.length ? Math.round(values.reduce((a, b) => a + b, 0) / values.length) : null;
-  const inRange = values.filter(v => v >= camper.target_low && v <= camper.target_high).length;
-  const tir    = values.length ? Math.round(inRange / values.length * 100) : null;
-  const lows   = values.filter(v => v < camper.target_low).length;
-  const highs  = values.filter(v => v > camper.target_high).length;
+  const s = computeStats(values, camper.target_low, camper.target_high);
+  const { avg, tirPct: tir, stdDev, veryLowPct, lowPct, inRangePct, highPct, veryHighPct, veryLowCount, lowCount, highCount, veryHighCount } = s;
+  const lows  = veryLowCount + lowCount;
+  const highs = highCount + veryHighCount;
+  const gmi = avg ? (3.31 + 0.02392 * avg).toFixed(1) : null;
+  const cv  = avg && stdDev ? Math.round((stdDev / avg) * 100) : null;
+  const totalCarbs   = events.filter(e => e.carbs_g > 0).reduce((a, e) => a + (e.carbs_g || 0), 0);
+  const totalInsulin = events.filter(e => e.dose_given > 0).reduce((a, e) => a + (e.dose_given || 0), 0);
 
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-end sm:items-center justify-center sm:p-4">
@@ -287,8 +290,8 @@ function CamperDetailModal({ camper, date, onClose }) {
                   width={32}
                 />
                 <ReferenceArea y1={camper.target_low} y2={camper.target_high} fill="#22c55e" fillOpacity={0.08} />
-                <ReferenceLine y={camper.target_low}  stroke="#f59e0b" strokeWidth={1} strokeDasharray="3 3" />
-                <ReferenceLine y={camper.target_high} stroke="#f59e0b" strokeWidth={1} strokeDasharray="3 3" />
+                <ReferenceLine y={camper.target_low}  stroke="#10b981" strokeWidth={1} strokeDasharray="3 3" />
+                <ReferenceLine y={camper.target_high} stroke="#10b981" strokeWidth={1} strokeDasharray="3 3" />
                 {shortActingMarkers.map(({ t, dose }, i) => (
                   <ReferenceLine key={`sa${i}`} x={t} stroke="#3b82f6" strokeWidth={1.5} strokeOpacity={0.6} strokeDasharray="3 3"
                     label={{ value: `${+parseFloat(dose).toFixed(1)}u`, position: 'insideTopRight', fill: '#3b82f6', fontSize: 10, fontWeight: 700 }}
@@ -316,11 +319,33 @@ function CamperDetailModal({ camper, date, onClose }) {
 
         {/* Stats */}
         {values.length > 0 && (
-          <div className="flex items-center gap-4 text-xs px-5 py-2 border-t border-b border-slate-100 shrink-0">
-            {tir !== null && <span className="text-emerald-600 font-semibold">{tir}% in range</span>}
-            {lows > 0 && <span className="text-amber-600 font-semibold">{lows} low{lows !== 1 ? 's' : ''}</span>}
-            {highs > 0 && <span className="text-slate-500">{highs} high{highs !== 1 ? 's' : ''}</span>}
-            <span className="text-slate-400 ml-auto">{avg} avg · {values.length} readings</span>
+          <div className="px-5 py-3 border-t border-slate-100 shrink-0 space-y-2.5">
+            {/* TIR + bar */}
+            <div className="flex items-center gap-4">
+              <div className="text-center shrink-0">
+                <div className={`text-3xl font-black leading-none ${tir >= 70 ? 'text-emerald-600' : tir >= 50 ? 'text-amber-500' : 'text-rose-600'}`}>{tir}%</div>
+                <div className="text-[9px] text-slate-400 uppercase tracking-wide mt-0.5">Time in Range</div>
+              </div>
+              <div className="flex-1">
+                <TIRBar veryHighPct={veryHighPct} highPct={highPct} inRangePct={inRangePct} lowPct={lowPct} veryLowPct={veryLowPct} height="h-4" />
+                <div className="grid grid-cols-5 text-center mt-1 gap-px">
+                  <div><span className="text-[9px] font-bold text-red-800">{veryHighPct}%</span><div className="text-[8px] text-slate-400">&gt;250</div></div>
+                  <div><span className="text-[9px] font-bold text-yellow-600">{highPct}%</span><div className="text-[8px] text-slate-400">High</div></div>
+                  <div><span className="text-[9px] font-bold text-emerald-700">{inRangePct}%</span><div className="text-[8px] text-slate-400">Range</div></div>
+                  <div><span className="text-[9px] font-bold text-orange-500">{lowPct}%</span><div className="text-[8px] text-slate-400">Low</div></div>
+                  <div><span className="text-[9px] font-bold text-red-900">{veryLowPct}%</span><div className="text-[8px] text-slate-400">&lt;54</div></div>
+                </div>
+              </div>
+            </div>
+            {/* Metrics row */}
+            <div className="grid grid-cols-6 gap-2 pt-2 border-t border-slate-50 text-center">
+              <div><div className="text-sm font-black text-slate-800">{avg}</div><div className="text-[9px] text-slate-400">Avg</div></div>
+              <div><div className="text-sm font-black text-slate-800">{gmi}%</div><div className="text-[9px] text-slate-400">GMI</div></div>
+              <div><div className={`text-sm font-black ${cv <= 36 ? 'text-emerald-600' : 'text-amber-500'}`}>{cv}%</div><div className="text-[9px] text-slate-400">CV</div></div>
+              <div><div className="text-sm font-black text-slate-800">±{stdDev}</div><div className="text-[9px] text-slate-400">SD</div></div>
+              <div><div className="text-sm font-black text-orange-500">{totalCarbs > 0 ? `${totalCarbs}g` : '—'}</div><div className="text-[9px] text-slate-400">Carbs</div></div>
+              <div><div className="text-sm font-black text-blue-500">{totalInsulin > 0 ? `${totalInsulin.toFixed(1)}u` : '—'}</div><div className="text-[9px] text-slate-400">Insulin</div></div>
+            </div>
           </div>
         )}
 
@@ -342,96 +367,162 @@ function CamperDetailModal({ camper, date, onClose }) {
 
 // ─── CamperDayCard ───────────────────────────────────────────────────────────
 
+function computeStats(values, targetLow, targetHigh) {
+  const total = values.length;
+  if (!total) return { total: 0, avg: null, stdDev: null, tirPct: null, veryLowPct: 0, lowPct: 0, inRangePct: 0, highPct: 0, veryHighPct: 0, veryLowCount: 0, lowCount: 0, inRangeCount: 0, highCount: 0, veryHighCount: 0 };
+  const veryLowCount  = values.filter(v => v < 54).length;
+  const lowCount      = values.filter(v => v >= 54 && v < targetLow).length;
+  const inRangeCount  = values.filter(v => v >= targetLow && v <= targetHigh).length;
+  const highCount     = values.filter(v => v > targetHigh && v <= 250).length;
+  const veryHighCount = values.filter(v => v > 250).length;
+  const avg    = Math.round(values.reduce((a, b) => a + b, 0) / total);
+  const stdDev = Math.round(Math.sqrt(values.reduce((s, v) => s + Math.pow(v - avg, 2), 0) / total));
+  return {
+    total,
+    avg, stdDev,
+    tirPct:      Math.round(inRangeCount  / total * 100),
+    veryLowPct:  Math.round(veryLowCount  / total * 100),
+    lowPct:      Math.round(lowCount      / total * 100),
+    inRangePct:  Math.round(inRangeCount  / total * 100),
+    highPct:     Math.round(highCount     / total * 100),
+    veryHighPct: Math.round(veryHighCount / total * 100),
+    veryLowCount, lowCount, inRangeCount, highCount, veryHighCount,
+  };
+}
+
+function TIRBar({ veryHighPct, highPct, inRangePct, lowPct, veryLowPct, height = 'h-2.5' }) {
+  return (
+    <div className={`flex ${height} rounded-full overflow-hidden bg-slate-100`}>
+      {veryHighPct > 0 && <div style={{ width: `${veryHighPct}%`, background: '#b91c1c' }} title={`Very High >250: ${veryHighPct}%`} />}
+      {highPct     > 0 && <div style={{ width: `${highPct}%`,     background: '#eab308' }} title={`High: ${highPct}%`} />}
+      {inRangePct  > 0 && <div style={{ width: `${inRangePct}%`,  background: '#16a34a' }} title={`In Range: ${inRangePct}%`} />}
+      {lowPct      > 0 && <div style={{ width: `${lowPct}%`,      background: '#f97316' }} title={`Low: ${lowPct}%`} />}
+      {veryLowPct  > 0 && <div style={{ width: `${veryLowPct}%`,  background: '#7f1d1d' }} title={`Very Low <54: ${veryLowPct}%`} />}
+    </div>
+  );
+}
+
 function CamperDayCard({ camper, date, onSelect }) {
   const { readings, events } = camper;
   const values = readings.map(r => r.value);
+  const s = computeStats(values, camper.target_low, camper.target_high);
 
-  const avg    = values.length ? Math.round(values.reduce((a, b) => a + b, 0) / values.length) : null;
-  const inRange = values.filter(v => v >= camper.target_low && v <= camper.target_high).length;
-  const tirPct  = values.length ? Math.round(inRange / values.length * 100) : null;
-  const lows    = values.filter(v => v < camper.target_low).length;
-  const highs   = values.filter(v => v > camper.target_high).length;
+  const totalCarbs   = events.filter(e => e.carbs_g > 0).reduce((a, e) => a + (e.carbs_g || 0), 0);
+  const totalInsulin = events.filter(e => e.dose_given > 0).reduce((a, e) => a + (e.dose_given || 0), 0);
   const hasCrit = values.some(v => v < 55 || v > 300);
+  const hasLows = (s.veryLowCount + s.lowCount) > 0;
 
-  const borderCls = hasCrit
-    ? 'border-red-300 bg-red-50/30'
-    : lows > 2
-    ? 'border-amber-300 bg-amber-50/20'
-    : 'border-slate-200';
+  const accentCls = hasCrit ? 'bg-red-500' : hasLows ? 'bg-amber-400' : 'bg-emerald-500';
+  const borderCls = hasCrit ? 'border-red-200' : hasLows ? 'border-amber-200' : 'border-slate-200';
 
   return (
-    <div className={`bg-white rounded-xl border-2 ${borderCls} p-4 shadow-sm flex flex-col gap-2`}>
-      {/* Header */}
-      <div className="flex items-start justify-between">
-        <div>
-          <Link
-            to={`/campers/${camper.id}`}
-            className="font-semibold text-slate-800 hover:text-blue-600 text-sm leading-snug"
-          >
-            {camper.name}
-          </Link>
-          <div className="flex items-center gap-1.5 mt-0.5">
-            {camper.cabin_group && (
-              <span className="text-xs text-slate-500 font-medium">{camper.cabin_group}</span>
+    <div className={`bg-white rounded-xl border-2 ${borderCls} shadow-sm overflow-hidden flex flex-col`}>
+      {/* Status accent bar */}
+      <div className={`h-1 ${accentCls}`} />
+
+      <div className="p-3 flex flex-col gap-2.5 flex-1">
+        {/* Header row */}
+        <div className="flex items-start justify-between gap-2">
+          <div className="min-w-0 flex-1">
+            <Link to={`/campers/${camper.id}`} className="font-bold text-slate-800 hover:text-blue-600 text-sm block truncate leading-snug">
+              {camper.name}
+            </Link>
+            <div className="flex items-center gap-1.5 mt-0.5">
+              {camper.cabin_group && <span className="text-[11px] text-slate-500">{camper.cabin_group}</span>}
+              <span className={`text-[10px] px-1.5 py-0.5 rounded font-semibold ${camper.delivery_method === 'pump' ? 'bg-blue-50 text-blue-600' : 'bg-violet-50 text-violet-600'}`}>
+                {camper.delivery_method}
+              </span>
+            </div>
+          </div>
+          <div className="flex items-center gap-1.5 shrink-0">
+            {s.tirPct !== null && (
+              <div className={`text-center px-2 py-1 rounded-lg ${s.tirPct >= 70 ? 'bg-emerald-50' : s.tirPct >= 50 ? 'bg-amber-50' : 'bg-rose-50'}`}>
+                <div className={`text-lg font-black leading-none tabular-nums ${s.tirPct >= 70 ? 'text-emerald-600' : s.tirPct >= 50 ? 'text-amber-500' : 'text-rose-600'}`}>
+                  {s.tirPct}%
+                </div>
+                <div className="text-[9px] text-slate-400 mt-0.5">TIR</div>
+              </div>
             )}
-            <span className={`text-xs px-1.5 py-0.5 rounded font-medium ${
-              camper.delivery_method === 'pump'
-                ? 'bg-blue-50 text-blue-600'
-                : 'bg-violet-50 text-violet-600'
-            }`}>
-              {camper.delivery_method}
-            </span>
+            <button onClick={onSelect} className="p-1.5 text-slate-300 hover:text-blue-500 rounded-lg hover:bg-slate-50 transition-colors" title="View full day">
+              <Maximize2 size={14} />
+            </button>
           </div>
         </div>
-        <div className="flex items-center gap-2 shrink-0">
-          {avg !== null && (
-            <div className="text-right">
-              <div className="text-xl font-bold text-slate-800 tabular-nums">{avg}</div>
-              <div className="text-xs text-slate-400">avg mg/dL</div>
+
+        {/* Stats grid */}
+        {s.total > 0 && (
+          <div className="grid grid-cols-4 gap-1 text-center">
+            <div className="bg-slate-50 rounded-lg py-1.5">
+              <div className="text-sm font-bold text-slate-700 tabular-nums">{s.avg}</div>
+              <div className="text-[9px] text-slate-400 uppercase tracking-wide">Avg</div>
             </div>
-          )}
-          <button
-            onClick={onSelect}
-            className="p-1.5 text-slate-300 hover:text-blue-500 rounded-lg hover:bg-slate-50 transition-colors"
-            title="View full day"
-          >
-            <Maximize2 size={15} />
-          </button>
-        </div>
-      </div>
-
-      {/* Sparkline */}
-      <MiniChart
-        readings={readings}
-        events={events}
-        targetLow={camper.target_low}
-        targetHigh={camper.target_high}
-        date={date}
-      />
-
-      {/* Stats row */}
-      {values.length > 0 && (
-        <div className="flex items-center gap-3 text-xs -mt-1">
-          {tirPct !== null && (
-            <span className="text-emerald-600 font-semibold">{tirPct}% in range</span>
-          )}
-          {lows > 0 && (
-            <span className="text-amber-600 font-semibold">{lows} low{lows !== 1 ? 's' : ''}</span>
-          )}
-          {highs > 0 && (
-            <span className="text-slate-500">{highs} high{highs !== 1 ? 's' : ''}</span>
-          )}
-          <span className="text-slate-300 ml-auto">{values.length} readings</span>
-        </div>
-      )}
-
-      {/* Events */}
-      <div className="border-t pt-2 space-y-1">
-        {events.length > 0 ? (
-          events.map((e, i) => <EventRow key={i} event={e} />)
-        ) : (
-          <p className="text-xs text-slate-300">No treatment events</p>
+            <div className="bg-slate-50 rounded-lg py-1.5">
+              <div className={`text-sm font-bold tabular-nums ${s.stdDev > 50 ? 'text-amber-500' : 'text-slate-700'}`}>±{s.stdDev}</div>
+              <div className="text-[9px] text-slate-400 uppercase tracking-wide">SD</div>
+            </div>
+            <div className={`rounded-lg py-1.5 ${(s.veryLowCount + s.lowCount) > 0 ? 'bg-rose-50' : 'bg-slate-50'}`}>
+              <div className={`text-sm font-bold tabular-nums ${(s.veryLowCount + s.lowCount) > 0 ? 'text-rose-600' : 'text-slate-300'}`}>
+                {s.veryLowCount + s.lowCount}
+              </div>
+              <div className="text-[9px] text-slate-400 uppercase tracking-wide">Lows</div>
+            </div>
+            <div className={`rounded-lg py-1.5 ${(s.highCount + s.veryHighCount) > 0 ? 'bg-amber-50' : 'bg-slate-50'}`}>
+              <div className={`text-sm font-bold tabular-nums ${(s.highCount + s.veryHighCount) > 0 ? 'text-amber-500' : 'text-slate-300'}`}>
+                {s.highCount + s.veryHighCount}
+              </div>
+              <div className="text-[9px] text-slate-400 uppercase tracking-wide">Highs</div>
+            </div>
+          </div>
         )}
+
+        {/* 5-zone TIR bar */}
+        {s.total > 0 && (
+          <TIRBar
+            veryHighPct={s.veryHighPct} highPct={s.highPct} inRangePct={s.inRangePct}
+            lowPct={s.lowPct} veryLowPct={s.veryLowPct}
+          />
+        )}
+
+        {/* Mini chart */}
+        <div className="rounded-lg overflow-hidden bg-slate-50">
+          <MiniChart
+            readings={readings} events={events}
+            targetLow={camper.target_low} targetHigh={camper.target_high}
+            date={date}
+          />
+        </div>
+
+        {/* Carbs / insulin totals */}
+        {(totalCarbs > 0 || totalInsulin > 0) && (
+          <div className="flex gap-2">
+            {totalCarbs > 0 && (
+              <span className="text-[11px] bg-orange-50 text-orange-600 px-2 py-0.5 rounded-full font-semibold">
+                {totalCarbs}g carbs
+              </span>
+            )}
+            {totalInsulin > 0 && (
+              <span className="text-[11px] bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full font-semibold">
+                {totalInsulin.toFixed(1)}u insulin
+              </span>
+            )}
+          </div>
+        )}
+
+        {/* Event list */}
+        <div className="border-t border-slate-100 pt-2 space-y-1.5 flex-1">
+          {events.length > 0 ? (
+            <>
+              {events.slice(0, 6).map((e, i) => <EventRow key={i} event={e} />)}
+              {events.length > 6 && (
+                <button onClick={onSelect} className="text-[11px] text-blue-400 hover:text-blue-600 w-full text-center pt-0.5">
+                  +{events.length - 6} more
+                </button>
+              )}
+            </>
+          ) : (
+            <p className="text-[11px] text-slate-300 text-center py-1">No treatment events</p>
+          )}
+        </div>
       </div>
     </div>
   );
