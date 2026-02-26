@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { LayoutDashboard, Users, LogOut, Shield, UserCog, Volume2, VolumeX, ClipboardList, TrendingUp, Home, CalendarDays } from 'lucide-react';
 import { getMuted, setMuted } from '../hooks/useAudioAlerts';
+import AiHelper from './AiHelper';
 
 function getUser() {
   try { return JSON.parse(localStorage.getItem('gv_user') || 'null'); } catch { return null; }
@@ -101,6 +102,8 @@ export default function Layout() {
       <main className="flex-1 overflow-auto pb-16 md:pb-0">
         <Outlet />
       </main>
+
+      <AiHelper />
 
       {/* Bottom tab bar — mobile only */}
       <nav className="flex md:hidden fixed bottom-0 inset-x-0 z-50 bg-slate-900 border-t border-slate-700">
