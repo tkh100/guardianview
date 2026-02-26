@@ -243,6 +243,65 @@ router.post('/:id/sync', requireAuth, async (req, res) => {
   res.json({ ok: !updated.sync_error, error: updated.sync_error || null });
 });
 
+// GET /api/campers/:id/print-flowsheet?week_start=YYYY-MM-DD
+// Returns full weekly flowsheet data for printing (admin/nurse only)
+router.get('/:id/print-flowsheet', ...requireRole('admin', 'nurse'), (req, res) => {
+  try {
+    const camperId = req.params.id;
+    const camper = db.prepare('SELECT * FROM campers WHERE id=? AND is_active=1').get(camperId);
+    if (!camper) return res.status(404).json({ error: 'Camper not found' });
+
+    // Default week_start to most recent Saturday
+    let weekStart = req.query.week_start;
+    if (!weekStart) {
+      const today = new Date();
+      const day = today.getDay(); // 0=Sun, 6=Sat
+      const diffToSat = (day >= 6) ? 0 : day + 1;
+      today.setDate(today.getDate() - diffToSat);
+      weekStart = today.toISOString().slice(0, 10);
+    }
+
+    // Build 8 days: arrival Saturday + Sun-Sat week
+    const days = [];
+    for (let i = 0; i < 8; i++) {
+      const d = new Date(weekStart + 'T12:00:00Z');
+      d.setUTCDate(d.getUTCDate() + i);
+      const dateStr = d.toISOString().slice(0, 10);
+      const nextDateStr = (() => {
+        const n = new Date(d);
+        n.setUTCDate(n.getUTCDate() + 1);
+        return n.toISOString().slice(0, 10);
+      })();
+
+      const settings = db.prepare(
+        'SELECT * FROM daily_settings WHERE camper_id=? AND setting_date=?'
+      ).get(camperId, dateStr) || null;
+
+      const events = db.prepare(`
+        SELECT created_at, bg_manual, ketones, carbs_g, calc_dose, dose_given,
+               site_change, long_acting_given, prebolus, note
+        FROM camper_events
+        WHERE camper_id=? AND created_at >= ? AND created_at < ?
+        ORDER BY created_at ASC
+      `).all(camperId, dateStr, nextDateStr);
+
+      const readings = db.prepare(`
+        SELECT reading_time, value, trend
+        FROM glucose_readings
+        WHERE camper_id=? AND reading_time >= ? AND reading_time < ?
+        ORDER BY reading_time ASC
+      `).all(camperId, dateStr, nextDateStr);
+
+      days.push({ date: dateStr, dayIndex: i, events, readings, settings });
+    }
+
+    res.json({ camper: stripCredentials(camper), weekStart, days });
+  } catch (err) {
+    console.error('[GET /campers/:id/print-flowsheet]', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 function stripCredentials(c) {
   if (!c) return c;
   const { cgm_password_enc, cgm_session_id, ...safe } = c;

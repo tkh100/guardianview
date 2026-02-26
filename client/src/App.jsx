@@ -8,6 +8,7 @@ import Checkin from './pages/Checkin';
 import Trends from './pages/Trends';
 import CabinView from './pages/CabinView';
 import Flowsheet from './pages/Flowsheet';
+import PrintFlowsheet from './pages/PrintFlowsheet';
 import Layout from './components/Layout';
 
 function PrivateRoute({ children, roles }) {
@@ -36,6 +37,8 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<Login />} />
+        {/* Standalone print page — no nav layout */}
+        <Route path="/campers/:id/print-flowsheet" element={<PrivateRoute><PrintFlowsheet /></PrivateRoute>} />
         <Route path="/" element={<PrivateRoute><Layout /></PrivateRoute>}>
           <Route index element={<DefaultRedirect />} />
           <Route path="dashboard" element={<Dashboard />} />
