@@ -622,7 +622,7 @@ function CamperDayCard({ camper, date, onSelect }) {
 
         {/* Stats grid */}
         {s.total > 0 && (
-          <div className="grid grid-cols-4 gap-1 text-center">
+          <div className="grid grid-cols-2 gap-1 text-center">
             <div className="bg-slate-50 rounded-lg py-1.5">
               <div className="text-sm font-bold text-slate-700 tabular-nums">{s.avg}</div>
               <div className="text-[9px] text-slate-400 uppercase tracking-wide">Avg</div>
@@ -630,18 +630,6 @@ function CamperDayCard({ camper, date, onSelect }) {
             <div className="bg-slate-50 rounded-lg py-1.5">
               <div className={`text-sm font-bold tabular-nums ${s.stdDev > 50 ? 'text-amber-500' : 'text-slate-700'}`}>±{s.stdDev}</div>
               <div className="text-[9px] text-slate-400 uppercase tracking-wide">SD</div>
-            </div>
-            <div className={`rounded-lg py-1.5 ${(s.veryLowCount + s.lowCount) > 0 ? 'bg-rose-50' : 'bg-slate-50'}`}>
-              <div className={`text-sm font-bold tabular-nums ${(s.veryLowCount + s.lowCount) > 0 ? 'text-rose-600' : 'text-slate-300'}`}>
-                {s.veryLowCount + s.lowCount}
-              </div>
-              <div className="text-[9px] text-slate-400 uppercase tracking-wide">Lows</div>
-            </div>
-            <div className={`rounded-lg py-1.5 ${(s.highCount + s.veryHighCount) > 0 ? 'bg-amber-50' : 'bg-slate-50'}`}>
-              <div className={`text-sm font-bold tabular-nums ${(s.highCount + s.veryHighCount) > 0 ? 'text-amber-500' : 'text-slate-300'}`}>
-                {s.highCount + s.veryHighCount}
-              </div>
-              <div className="text-[9px] text-slate-400 uppercase tracking-wide">Highs</div>
             </div>
           </div>
         )}
