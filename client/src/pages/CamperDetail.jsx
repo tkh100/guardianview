@@ -512,9 +512,9 @@ export default function CamperDetail() {
 
       {/* Header card */}
       <div className={`rounded-2xl p-4 md:p-6 ring-2 mb-4 md:mb-6 ${styles.bg} ${styles.ring}`}>
-        <div className="flex items-start justify-between">
-          <div>
-            <h1 className="text-xl md:text-2xl font-bold text-slate-800">{camper.name}</h1>
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+          <div className="min-w-0">
+            <h1 className="text-xl md:text-2xl font-bold text-slate-800 truncate">{camper.name}</h1>
             <div className="flex items-center gap-2 mt-0.5">
               {camper.cabin_group && <p className="text-slate-500 text-sm">{camper.cabin_group}</p>}
               <span className={`text-xs px-1.5 py-0.5 rounded font-medium ${isPump ? 'bg-indigo-100 text-indigo-700' : 'bg-amber-100 text-amber-700'}`}>
@@ -522,12 +522,15 @@ export default function CamperDetail() {
               </span>
             </div>
           </div>
-          <div className="flex items-center gap-3">
-            {camper.cgm_connected ? <Wifi size={18} className="text-emerald-500" /> : <WifiOff size={18} className="text-slate-400" />}
+          <div className="flex items-center gap-1 shrink-0 -mx-1.5 sm:mx-0">
+            <span className="p-2 shrink-0" title={camper.cgm_connected ? 'CGM connected' : 'CGM not connected'}>
+              {camper.cgm_connected ? <Wifi size={16} className="text-emerald-500" /> : <WifiOff size={16} className="text-slate-400" />}
+            </span>
             <button onClick={handleSync} disabled={syncing || !camper.cgm_connected}
-              className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800 disabled:opacity-40 transition-colors py-1 px-2 rounded-lg">
-              <RefreshCw size={14} className={syncing ? 'animate-spin' : ''} />
-              {syncing ? 'Syncing...' : 'Sync'}
+              className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800 hover:bg-white/60 disabled:opacity-40 transition-colors py-2 px-2 rounded-lg"
+              title="Sync CGM">
+              <RefreshCw size={15} className={syncing ? 'animate-spin' : ''} />
+              <span className="hidden sm:inline">{syncing ? 'Syncing...' : 'Sync'}</span>
             </button>
             <button
               onClick={async () => {
@@ -541,11 +544,11 @@ export default function CamperDetail() {
                 finally { setExporting(false); }
               }}
               disabled={exporting}
-              className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800 disabled:opacity-40 transition-colors py-1 px-2 rounded-lg"
+              className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800 hover:bg-white/60 disabled:opacity-40 transition-colors py-2 px-2 rounded-lg"
               title="Download flowsheet CSV"
             >
-              <Download size={14} />
-              {exporting ? 'Exporting…' : 'Export CSV'}
+              <Download size={15} />
+              <span className="hidden sm:inline">{exporting ? 'Exporting…' : 'Export CSV'}</span>
             </button>
             <button
               onClick={() => {
@@ -556,18 +559,18 @@ export default function CamperDetail() {
                 const weekStart = today.toISOString().slice(0, 10);
                 window.open(`/campers/${id}/print-flowsheet?week_start=${weekStart}`, '_blank');
               }}
-              className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800 transition-colors py-1 px-2 rounded-lg"
+              className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800 hover:bg-white/60 transition-colors py-2 px-2 rounded-lg"
               title="Print weekly flowsheet"
             >
-              <Printer size={14} />
-              Print
+              <Printer size={15} />
+              <span className="hidden sm:inline">Print</span>
             </button>
           </div>
         </div>
         <div className="mt-4">
           <GlucoseIndicator value={camper.latest_value} trend={camper.latest_trend} targetLow={camper.target_low} targetHigh={camper.target_high} size="lg" />
           <p className="text-slate-500 text-xs mt-1">Last reading: {timeAgo(camper.latest_reading_time)}</p>
-          {camper.sync_error && <p className="text-rose-500 text-xs mt-1">Sync error: {camper.sync_error}</p>}
+          {camper.sync_error && <p className="text-rose-500 text-xs mt-1 break-words">Sync error: {camper.sync_error}</p>}
         </div>
       </div>
 

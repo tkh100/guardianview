@@ -93,7 +93,7 @@ export default function AiHelper() {
       <button
         onClick={() => setOpen(o => !o)}
         title="AI Assistant"
-        className={`fixed bottom-20 right-4 md:bottom-6 z-40 w-12 h-12 rounded-full shadow-lg flex items-center justify-center transition-all ${
+        className={`fixed bottom-24 right-4 md:bottom-6 z-40 w-12 h-12 rounded-full shadow-lg flex items-center justify-center transition-all ${
           open ? 'bg-slate-700 text-white' : 'bg-blue-600 hover:bg-blue-700 text-white'
         }`}
       >
@@ -102,8 +102,8 @@ export default function AiHelper() {
 
       {/* Chat panel */}
       {open && (
-        <div className="fixed bottom-36 right-4 md:bottom-20 z-40 w-80 sm:w-96 bg-white rounded-2xl shadow-2xl border border-slate-200 flex flex-col overflow-hidden"
-          style={{ maxHeight: 'calc(100vh - 180px)' }}
+        <div className="fixed bottom-40 right-4 left-4 sm:left-auto md:bottom-20 z-40 sm:w-96 bg-white rounded-2xl shadow-2xl border border-slate-200 flex flex-col overflow-hidden"
+          style={{ maxHeight: 'calc(100vh - 220px)' }}
         >
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 bg-blue-600 text-white shrink-0">

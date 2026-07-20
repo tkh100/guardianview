@@ -13,23 +13,29 @@ function timeAgo(isoString) {
 export default function CamperCard({ camper }) {
   const status = getGlucoseStatus(camper.latest_value, camper.target_low, camper.target_high);
   const styles = STATUS_STYLES[status];
+  const isCritical = status === 'critical_low' || status === 'critical_high';
   const stale = camper.latest_reading_time
     ? Date.now() - new Date(camper.latest_reading_time) > 15 * 60_000
     : true;
 
   return (
-    <Link to={`/campers/${camper.id}`}>
+    <Link to={`/campers/${camper.id}`} className="block group">
       <div className={`
-        relative rounded-xl p-4 ring-2 transition-all hover:shadow-md hover:-translate-y-0.5 cursor-pointer
-        ${styles.bg} ${styles.ring}
-        ${(status === 'critical_low' || status === 'critical_high') ? 'animate-pulse' : ''}
+        relative rounded-2xl p-4 ring-1 border-l-4 transition-all duration-200 cursor-pointer
+        shadow-soft hover:shadow-card-hover hover:-translate-y-0.5
+        ${styles.bg} ${styles.ring} ${styles.border}
       `}>
         {/* Status dot */}
-        <div className={`absolute top-3 right-3 w-2.5 h-2.5 rounded-full ${styles.dot}`} />
+        <span className="absolute top-3.5 right-3.5 flex h-2.5 w-2.5">
+          {isCritical && (
+            <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${styles.solid} opacity-60`} />
+          )}
+          <span className={`relative inline-flex rounded-full h-2.5 w-2.5 ${styles.dot}`} />
+        </span>
 
         <p className="font-semibold text-slate-800 text-sm truncate pr-4">{camper.name}</p>
         {camper.cabin_group && (
-          <p className="text-slate-500 text-xs mb-2">{camper.cabin_group}</p>
+          <p className="text-slate-400 text-[11px] font-medium uppercase tracking-wide mb-2">{camper.cabin_group}</p>
         )}
 
         {!camper.cgm_connected ? (
@@ -54,9 +60,9 @@ export default function CamperCard({ camper }) {
 
         {camper.latest_reading_time && (() => {
           const mins = Math.round((Date.now() - new Date(camper.latest_reading_time)) / 60_000);
-          const timeColor = mins > 15 ? 'text-rose-400' : mins > 10 ? 'text-amber-400' : 'text-slate-400';
+          const timeColor = mins > 15 ? 'text-rose-400' : mins > 10 ? 'text-amber-500' : 'text-slate-400';
           return (
-            <div className={`flex items-center gap-1 text-xs mt-2 ${timeColor}`}>
+            <div className={`flex items-center gap-1 text-xs mt-2.5 font-medium ${timeColor}`}>
               <Clock size={11} />
               <span>{timeAgo(camper.latest_reading_time)}</span>
             </div>

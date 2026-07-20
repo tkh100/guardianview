@@ -6,9 +6,32 @@
   body {
     @apply bg-slate-50 text-slate-800 font-sans antialiased;
   }
+
+  * {
+    scrollbar-color: theme('colors.slate.300') transparent;
+    scrollbar-width: thin;
+  }
+  *::-webkit-scrollbar { width: 8px; height: 8px; }
+  *::-webkit-scrollbar-track { background: transparent; }
+  *::-webkit-scrollbar-thumb {
+    background-color: theme('colors.slate.300');
+    border-radius: 9999px;
+  }
+  *::-webkit-scrollbar-thumb:hover { background-color: theme('colors.slate.400'); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
 }
 
 @layer utilities {
   .no-scrollbar::-webkit-scrollbar { display: none; }
   .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+  .skeleton {
+    @apply bg-gradient-to-r from-slate-100 via-slate-200 to-slate-100;
+    background-size: 200% 100%;
+    animation: shimmer 1.6s linear infinite;
+  }
 }

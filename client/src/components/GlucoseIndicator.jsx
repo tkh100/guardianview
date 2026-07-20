@@ -17,12 +17,12 @@ export function getGlucoseStatus(value, targetLow = 70, targetHigh = 180) {
 }
 
 export const STATUS_STYLES = {
-  nodata:       { bg: 'bg-slate-200', text: 'text-slate-400', ring: 'ring-slate-300', label: 'No Data', dot: 'bg-slate-400' },
-  normal:       { bg: 'bg-emerald-50', text: 'text-emerald-700', ring: 'ring-emerald-300', label: 'In Range', dot: 'bg-emerald-500' },
-  low:          { bg: 'bg-amber-50', text: 'text-amber-700', ring: 'ring-amber-300', label: 'Low', dot: 'bg-amber-500' },
-  high:         { bg: 'bg-amber-50', text: 'text-amber-700', ring: 'ring-amber-300', label: 'High', dot: 'bg-amber-500' },
-  critical_low: { bg: 'bg-rose-100', text: 'text-rose-700', ring: 'ring-rose-400', label: 'Critical Low', dot: 'bg-rose-600' },
-  critical_high:{ bg: 'bg-rose-100', text: 'text-rose-700', ring: 'ring-rose-400', label: 'Critical High', dot: 'bg-rose-600' },
+  nodata:       { bg: 'bg-slate-100', text: 'text-slate-400', ring: 'ring-slate-200', border: 'border-slate-300', label: 'No Data', dot: 'bg-slate-400', solid: 'bg-slate-400' },
+  normal:       { bg: 'bg-gradient-to-br from-emerald-50 to-emerald-100/60', text: 'text-emerald-700', ring: 'ring-emerald-200', border: 'border-emerald-400', label: 'In Range', dot: 'bg-emerald-500', solid: 'bg-emerald-500' },
+  low:          { bg: 'bg-gradient-to-br from-amber-50 to-amber-100/60', text: 'text-amber-700', ring: 'ring-amber-200', border: 'border-amber-400', label: 'Low', dot: 'bg-amber-500', solid: 'bg-amber-500' },
+  high:         { bg: 'bg-gradient-to-br from-amber-50 to-amber-100/60', text: 'text-amber-700', ring: 'ring-amber-200', border: 'border-amber-400', label: 'High', dot: 'bg-amber-500', solid: 'bg-amber-500' },
+  critical_low: { bg: 'bg-gradient-to-br from-rose-50 to-rose-100/70', text: 'text-rose-700', ring: 'ring-rose-300', border: 'border-rose-500', label: 'Critical Low', dot: 'bg-rose-600', solid: 'bg-rose-600' },
+  critical_high:{ bg: 'bg-gradient-to-br from-rose-50 to-rose-100/70', text: 'text-rose-700', ring: 'ring-rose-300', border: 'border-rose-500', label: 'Critical High', dot: 'bg-rose-600', solid: 'bg-rose-600' },
 };
 
 export default function GlucoseIndicator({ value, trend, targetLow, targetHigh, size = 'md' }) {
@@ -32,19 +32,20 @@ export default function GlucoseIndicator({ value, trend, targetLow, targetHigh, 
 
   const sizes = {
     sm: 'text-lg font-bold',
-    md: 'text-3xl font-bold',
-    lg: 'text-5xl font-black',
+    md: 'text-3xl font-bold tracking-tight',
+    lg: 'text-6xl font-black tracking-tight',
   };
+  const arrowSizes = { sm: 'text-sm', md: 'text-xl', lg: 'text-3xl' };
 
   return (
     <div>
-      <div className={`flex items-baseline gap-1 ${styles.text}`}>
+      <div className={`flex items-baseline gap-1.5 ${styles.text}`}>
         <span className={sizes[size]}>
           {value ?? '--'}
         </span>
-        {value && <span className="text-lg">{arrow}</span>}
+        {value && <span className={`${arrowSizes[size]} font-bold`}>{arrow}</span>}
       </div>
-      {size !== 'sm' && <div className="text-xs text-slate-500 mt-0.5">mg/dL</div>}
+      {size !== 'sm' && <div className="text-xs font-medium text-slate-400 mt-0.5 tracking-wide">mg/dL</div>}
     </div>
   );
 }
