@@ -40,7 +40,7 @@ router.get('/', requireAuth, (req, res) => {
 });
 
 // GET /api/campers/trends — TIR and stats for all active campers
-router.get('/trends', requireAuth, (req, res) => {
+router.get('/trends', ...requireRole('admin', 'nurse'), (req, res) => {
   const campers = db.prepare(`
     SELECT c.id, c.name, c.cabin_group, c.delivery_method,
            c.target_low, c.target_high,

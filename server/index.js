@@ -6,6 +6,38 @@ const bcrypt = require('bcryptjs');
 const helmet = require('helmet');
 const db = require('./db');
 
+// Fail fast on missing/insecure required secrets rather than silently running
+// with a guessable default. This handles PHI for minors — a weak/placeholder
+// admin password or missing JWT secret is not something to discover later.
+function validateEnv() {
+  const problems = [];
+
+  if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) {
+    problems.push('JWT_SECRET is missing or too short (needs 32+ characters). Generate one with: openssl rand -hex 32');
+  }
+
+  const adminPassword = process.env.ADMIN_PASSWORD;
+  if (!adminPassword || adminPassword === 'changeme' || adminPassword.length < 8) {
+    problems.push('ADMIN_PASSWORD is missing, still the "changeme" placeholder, or shorter than 8 characters. Set a real password.');
+  }
+
+  if (process.env.ENCRYPTION_KEY) {
+    const key = process.env.ENCRYPTION_KEY;
+    if (key.length < 64 || !/^[0-9a-fA-F]+$/.test(key.slice(0, 64))) {
+      problems.push('ENCRYPTION_KEY must be a 64-character hex string. Generate one with: openssl rand -hex 32');
+    }
+  } else {
+    problems.push('ENCRYPTION_KEY is missing. Generate one with: openssl rand -hex 32');
+  }
+
+  if (problems.length) {
+    console.error('[startup] Refusing to start — fix these environment variables:\n' + problems.map(p => `  - ${p}`).join('\n'));
+    process.exit(1);
+  }
+}
+
+validateEnv();
+
 const app = express();
 app.use(helmet());
 app.use(express.json({ limit: '1mb' }));
@@ -38,8 +70,8 @@ if (process.env.NODE_ENV === 'production') {
 function seedAdmin() {
   const count = db.prepare('SELECT COUNT(*) as n FROM app_users').get().n;
   if (count === 0) {
-    const password = process.env.ADMIN_PASSWORD || 'changeme';
-    const hash = bcrypt.hashSync(password, 10);
+    // validateEnv() already guarantees ADMIN_PASSWORD is set and isn't the placeholder
+    const hash = bcrypt.hashSync(process.env.ADMIN_PASSWORD, 10);
     db.prepare("INSERT INTO app_users (username, password_hash, role) VALUES ('admin', ?, 'admin')")
       .run(hash);
     console.log('[init] Created admin user. Username: admin');
