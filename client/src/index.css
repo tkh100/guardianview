@@ -33,13 +33,19 @@
    * 100vh on mobile Safari is measured against the viewport with the address
    * bar collapsed, which is taller than what's actually visible when it's
    * showing (the default state). That inflates this container below the
-   * fold, dragging the fixed bottom nav down with it. dvh tracks the real
-   * visible viewport; vh stays as the fallback for browsers that don't
-   * parse dvh (the invalid line is simply ignored, leaving vh in effect).
+   * fold, dragging the fixed bottom nav down with it.
+   *
+   * svh (small viewport height) fixes that using a *static* value — the
+   * viewport as if the address bar is always showing — so it never changes
+   * mid-interaction. dvh would also fix the sinking, but it recalculates
+   * live as the address bar shows/hides, which reflows this container (and
+   * the fixed nav pinned to it) right as you're tapping. vh stays as the
+   * fallback for browsers that don't parse svh (the invalid line is simply
+   * ignored, leaving vh in effect).
    */
   .h-app-screen {
     height: 100vh;
-    height: 100dvh;
+    height: 100svh;
   }
 
   .skeleton {
