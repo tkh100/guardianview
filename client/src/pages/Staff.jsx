@@ -107,8 +107,8 @@ export default function Staff() {
           </div>
           <div>
             <label className="block text-xs text-slate-500 mb-1">Password *</label>
-            <input required type="password" value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
-              autoComplete="new-password" placeholder="Min 6 characters"
+            <input required type="password" minLength={8} value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
+              autoComplete="new-password" placeholder="Min 8 characters"
               className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-pine-400 focus:border-pine-400 transition-colors" />
           </div>
           <div>
@@ -157,9 +157,9 @@ export default function Staff() {
               {resetId === u.id ? (
                 <form onSubmit={handleResetPassword} className="flex flex-wrap items-center gap-2">
                   <span className="text-sm font-medium text-slate-700 mr-1">{u.username}</span>
-                  <input type="password" required minLength={6} value={resetPw}
+                  <input type="password" required minLength={8} value={resetPw}
                     onChange={e => setResetPw(e.target.value)}
-                    placeholder="New password"
+                    placeholder="New password (min 8 chars)"
                     autoFocus
                     className="border border-slate-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-pine-400 focus:border-pine-400 w-40 transition-colors" />
                   {resetError && <span className="text-rose-500 text-xs">{resetError}</span>}
