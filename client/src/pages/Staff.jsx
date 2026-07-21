@@ -111,7 +111,7 @@ export default function Staff() {
               autoComplete="new-password" placeholder="Min 8 characters"
               className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-pine-400 focus:border-pine-400 transition-colors" />
           </div>
-          <div>
+          <div className="col-span-2">
             <label className="block text-xs text-slate-500 mb-1">Role *</label>
             <select value={form.role} onChange={e => setForm(f => ({ ...f, role: e.target.value }))}
               className="w-full border border-slate-200 rounded-lg px-2 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-pine-400 focus:border-pine-400 transition-colors">

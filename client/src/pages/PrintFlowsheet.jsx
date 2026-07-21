@@ -93,10 +93,15 @@ function buildSlotMap(events, readings, slots) {
 // Format a cell's primary numeric values (prefer manual BG over CGM)
 function fmtBG(bgs) {
   if (!bgs.length) return '';
-  // Prefer manual readings; if none, use CGM
+  // Prefer manual (fingerstick) readings — there are only ever a few per hour,
+  // so listing each is useful.
   const manual = bgs.filter(b => !b.cgm);
-  const show = manual.length ? manual : bgs;
-  return show.map(b => b.val).join('\n');
+  if (manual.length) return manual.map(b => b.val).join('\n');
+  // No manual check this hour: CGM reports every ~5 minutes, so listing every
+  // raw value would dump a dozen+ numbers into one cell. Show the range instead.
+  const vals = bgs.map(b => b.val);
+  const min = Math.min(...vals), max = Math.max(...vals);
+  return min === max ? String(min) : `${min}–${max}`;
 }
 
 function fmtNums(arr) {

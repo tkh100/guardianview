@@ -201,11 +201,11 @@ export default function Checkin() {
           <div className="grid grid-cols-3 gap-3">
             <div>
               <label className={labelCls}>Target Low</label>
-              <input type="number" value={s1.target_low} onChange={f1('target_low')} className={inputCls} />
+              <input type="number" value={s1.target_low} min={50} max={100} onChange={f1('target_low')} className={inputCls} />
             </div>
             <div>
               <label className={labelCls}>Target High</label>
-              <input type="number" value={s1.target_high} onChange={f1('target_high')} className={inputCls} />
+              <input type="number" value={s1.target_high} min={150} max={300} onChange={f1('target_high')} className={inputCls} />
             </div>
             <div>
               <label className={labelCls}>Carb Ratio</label>

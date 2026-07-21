@@ -444,7 +444,7 @@ function CamperDetailModal({ camper: initialCamper, date: initialDate, onClose }
               <div className="flex items-center gap-2 mt-0.5">
                 {camper.cabin_group && <span className="text-xs text-slate-500">{camper.cabin_group}</span>}
                 <span className={`text-xs px-1.5 py-0.5 rounded font-medium ${
-                  camper.delivery_method === 'pump' ? 'bg-blue-50 text-blue-600' : 'bg-violet-50 text-violet-600'
+                  camper.delivery_method === 'pump' ? 'bg-indigo-100 text-indigo-700' : 'bg-amber-100 text-amber-700'
                 }`}>{camper.delivery_method}</span>
               </div>
             </div>
@@ -643,7 +643,7 @@ function CamperDayCard({ camper, date, onSelect }) {
             </Link>
             <div className="flex items-center gap-1.5 mt-0.5">
               {camper.cabin_group && <span className="text-[11px] text-slate-500">{camper.cabin_group}</span>}
-              <span className={`text-[10px] px-1.5 py-0.5 rounded font-semibold ${camper.delivery_method === 'pump' ? 'bg-blue-50 text-blue-600' : 'bg-violet-50 text-violet-600'}`}>
+              <span className={`text-[10px] px-1.5 py-0.5 rounded font-semibold ${camper.delivery_method === 'pump' ? 'bg-indigo-100 text-indigo-700' : 'bg-amber-100 text-amber-700'}`}>
                 {camper.delivery_method}
               </span>
             </div>
