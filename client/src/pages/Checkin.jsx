@@ -9,9 +9,9 @@ const CABIN_GROUPS = [
 
 function StepBar({ step, total }) {
   return (
-    <div className="flex gap-1 mb-6">
+    <div className="flex gap-1.5 mb-6">
       {Array.from({ length: total }, (_, i) => (
-        <div key={i} className={`h-1.5 flex-1 rounded-full transition-colors ${i < step ? 'bg-blue-600' : 'bg-slate-200'}`} />
+        <div key={i} className={`h-1.5 flex-1 rounded-full transition-colors ${i < step ? 'bg-gradient-to-r from-blue-500 to-blue-600' : 'bg-slate-200'}`} />
       ))}
     </div>
   );
@@ -148,7 +148,7 @@ export default function Checkin() {
               Check In Another
             </button>
             <button onClick={() => navigate('/dashboard')}
-              className="w-full py-3 bg-white border border-slate-200 text-slate-700 rounded-xl font-medium hover:bg-slate-50 transition-colors">
+              className="w-full py-3 bg-white border border-slate-200/80 text-slate-700 rounded-xl font-medium hover:bg-slate-50 transition-colors">
               Go to Dashboard
             </button>
           </div>
@@ -161,7 +161,7 @@ export default function Checkin() {
 
   return (
     <div className="max-w-lg mx-auto p-4 md:p-6">
-      <h1 className="text-xl md:text-2xl font-bold text-slate-800 mb-0.5">Camper Check-In</h1>
+      <h1 className="text-xl md:text-2xl font-display font-bold text-slate-800 tracking-tight mb-0.5">Camper Check-In</h1>
       <p className="text-slate-500 text-sm mb-4">Step {step} of 4 — {STEP_LABELS[step - 1]}</p>
       <StepBar step={step} total={4} />
 
@@ -267,10 +267,10 @@ export default function Checkin() {
           <div>
             <label className={labelCls}>Profile Notes</label>
             <textarea value={s2.profile_notes} onChange={f2('profile_notes')} rows={2} placeholder="Any additional medical notes..."
-              className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none" />
+              className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none transition-colors" />
           </div>
           <div className="flex gap-2 mt-2">
-            <button onClick={() => setStep(1)} className="flex-1 py-3 bg-white border border-slate-200 text-slate-700 rounded-xl font-medium hover:bg-slate-50 transition-colors">Back</button>
+            <button onClick={() => setStep(1)} className="flex-1 py-3 bg-white border border-slate-200/80 text-slate-700 rounded-xl font-medium hover:bg-slate-50 transition-colors">Back</button>
             <button onClick={handleStep2} disabled={saving}
               className="flex-1 py-3 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 disabled:opacity-40 transition-colors">
               {saving ? 'Saving...' : 'Next: Registration'}
@@ -362,7 +362,7 @@ export default function Checkin() {
           )}
 
           <div className="flex gap-2 mt-2">
-            <button onClick={() => setStep(2)} className="flex-1 py-3 bg-white border border-slate-200 text-slate-700 rounded-xl font-medium hover:bg-slate-50 transition-colors">Back</button>
+            <button onClick={() => setStep(2)} className="flex-1 py-3 bg-white border border-slate-200/80 text-slate-700 rounded-xl font-medium hover:bg-slate-50 transition-colors">Back</button>
             <button onClick={handleStep3} disabled={saving}
               className="flex-1 py-3 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 disabled:opacity-40 transition-colors">
               {saving ? 'Saving...' : 'Next: CGM Setup'}
@@ -435,7 +435,7 @@ export default function Checkin() {
           )}
 
           <div className="flex gap-2 mt-2">
-            <button onClick={() => setStep(3)} className="py-3 px-4 bg-white border border-slate-200 text-slate-700 rounded-xl font-medium hover:bg-slate-50 transition-colors">Back</button>
+            <button onClick={() => setStep(3)} className="py-3 px-4 bg-white border border-slate-200/80 text-slate-700 rounded-xl font-medium hover:bg-slate-50 transition-colors">Back</button>
             <button onClick={handleStep4} disabled={saving}
               className="flex-1 py-3 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 disabled:opacity-40 transition-colors">
               {saving ? 'Connecting...' : 'Connect & Finish'}

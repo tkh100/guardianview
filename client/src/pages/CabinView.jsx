@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { Clock, X, ChevronLeft } from 'lucide-react';
+import { Clock, X, ChevronLeft, Home } from 'lucide-react';
 import { api } from '../api';
 import { getGlucoseStatus, STATUS_STYLES } from '../components/GlucoseIndicator';
 
@@ -96,7 +96,7 @@ function BgCard({ camper, entry, onNext, onSkip, index, total }) {
       {/* Buttons */}
       <div className="flex gap-3">
         <button onClick={onSkip}
-          className="flex-1 py-3.5 rounded-xl text-sm font-medium bg-white border border-slate-200 text-slate-500 hover:bg-slate-50 transition-colors">
+          className="flex-1 py-3.5 rounded-xl text-sm font-medium bg-white border border-slate-200/80 text-slate-500 hover:bg-slate-50 transition-colors">
           Skip
         </button>
         <button onClick={() => onNext(bg)}
@@ -207,7 +207,7 @@ function CarbsCard({ camper, entry, onNext, onSkip, index, total }) {
       {/* Buttons */}
       <div className="flex gap-3">
         <button onClick={onSkip}
-          className="flex-1 py-3.5 rounded-xl text-sm font-medium bg-white border border-slate-200 text-slate-500 hover:bg-slate-50 transition-colors">
+          className="flex-1 py-3.5 rounded-xl text-sm font-medium bg-white border border-slate-200/80 text-slate-500 hover:bg-slate-50 transition-colors">
           Skip
         </button>
         <button onClick={() => onNext(carbs, totalCalc > 0 ? String(totalCalc) : '', doseGiven)}
@@ -343,17 +343,22 @@ export default function CabinView() {
   return (
     <div className="max-w-2xl mx-auto p-4 md:p-6">
       {/* Header */}
-      <div className="flex items-center justify-between mb-4">
-        <div>
-          <h1 className="text-xl font-bold text-slate-800">Cabin View</h1>
-          <p className="text-slate-500 text-sm">{filtered.length} camper{filtered.length !== 1 ? 's' : ''}</p>
+      <div className="flex items-center justify-between mb-4 gap-3">
+        <div className="flex items-center gap-3 min-w-0">
+          <span className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center shadow-glow shrink-0">
+            <Home size={18} className="text-white" />
+          </span>
+          <div className="min-w-0">
+            <h1 className="text-xl font-display font-bold text-slate-800 tracking-tight">Cabin View</h1>
+            <p className="text-slate-500 text-sm">{filtered.length} camper{filtered.length !== 1 ? 's' : ''}</p>
+          </div>
         </div>
         <button
           onClick={startRound}
           disabled={filtered.length === 0 || loading}
-          className="flex items-center gap-2 px-4 py-2.5 bg-violet-600 text-white rounded-xl font-semibold text-sm hover:bg-violet-700 disabled:opacity-40 transition-colors shadow-sm"
+          className="shrink-0 flex items-center gap-2 px-4 py-2.5 bg-gradient-to-br from-violet-600 to-violet-700 text-white rounded-xl font-semibold text-sm hover:from-violet-500 hover:to-violet-600 disabled:opacity-40 transition-all shadow-soft"
         >
-          🍽️ {meal.label} Round
+          🍽️ <span className="hidden sm:inline">{meal.label} Round</span><span className="sm:hidden">Round</span>
         </button>
       </div>
 
@@ -518,7 +523,7 @@ export default function CabinView() {
                 ) : (
                   <>
                     <h3 className="font-semibold text-slate-700 mb-3">{mealLabel} — {filtered.length} campers</h3>
-                    <div className="bg-white rounded-xl border border-slate-200 overflow-hidden mb-4">
+                    <div className="bg-white rounded-xl border border-slate-200/80 overflow-hidden mb-4">
                       <table className="w-full text-sm">
                         <thead className="bg-slate-50 border-b border-slate-200">
                           <tr>

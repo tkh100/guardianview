@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { UserPlus, Trash2, KeyRound } from 'lucide-react';
+import { UserPlus, Trash2, KeyRound, UserCog } from 'lucide-react';
 import { api } from '../api';
 
 const ROLES = ['nurse', 'counselor', 'admin'];
@@ -82,13 +82,18 @@ export default function Staff() {
 
   return (
     <div className="max-w-2xl mx-auto p-4 md:p-6">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-slate-800">Staff Accounts</h1>
-        <p className="text-slate-500 text-sm">{users.length} account{users.length !== 1 ? 's' : ''}</p>
+      <div className="flex items-center gap-3 mb-6">
+        <span className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center shadow-glow shrink-0">
+          <UserCog size={18} className="text-white" />
+        </span>
+        <div>
+          <h1 className="text-xl md:text-2xl font-display font-bold text-slate-800 tracking-tight">Staff Accounts</h1>
+          <p className="text-slate-500 text-sm">{users.length} account{users.length !== 1 ? 's' : ''}</p>
+        </div>
       </div>
 
       {/* Add staff form */}
-      <form onSubmit={handleAdd} className="bg-white rounded-xl border border-slate-200 shadow-sm p-5 mb-6">
+      <form onSubmit={handleAdd} className="bg-white rounded-2xl border border-slate-200/80 shadow-soft p-5 mb-6">
         <h2 className="font-semibold text-slate-700 mb-4 flex items-center gap-2">
           <UserPlus size={16} /> Add Staff Account
         </h2>
@@ -98,18 +103,18 @@ export default function Staff() {
             <label className="block text-xs text-slate-500 mb-1">Username *</label>
             <input required value={form.username} onChange={e => setForm(f => ({ ...f, username: e.target.value }))}
               autoComplete="off" placeholder="jsmith"
-              className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors" />
           </div>
           <div>
             <label className="block text-xs text-slate-500 mb-1">Password *</label>
             <input required type="password" value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
               autoComplete="new-password" placeholder="Min 6 characters"
-              className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors" />
           </div>
           <div>
             <label className="block text-xs text-slate-500 mb-1">Role *</label>
             <select value={form.role} onChange={e => setForm(f => ({ ...f, role: e.target.value }))}
-              className="w-full border border-slate-200 rounded-lg px-2 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+              className="w-full border border-slate-200 rounded-lg px-2 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors">
               <option value="nurse">Med Staff — sees all campers</option>
               <option value="counselor">Counselor — sees their cabin</option>
               <option value="admin">Admin — full access</option>
@@ -119,7 +124,7 @@ export default function Staff() {
             <div>
               <label className="block text-xs text-slate-500 mb-1">Cabin / Group</label>
               <select value={form.cabin_group} onChange={e => setForm(f => ({ ...f, cabin_group: e.target.value }))}
-                className="w-full border border-slate-200 rounded-lg px-2 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                className="w-full border border-slate-200 rounded-lg px-2 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors">
                 <option value="">— select cabin —</option>
                 {CABIN_GROUPS.map(g => <option key={g} value={g}>{g}</option>)}
               </select>
@@ -137,7 +142,7 @@ export default function Staff() {
           )}
         </div>
         <button type="submit" disabled={adding}
-          className="mt-4 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors">
+          className="mt-4 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-sm font-medium px-4 py-2 rounded-xl transition-colors shadow-soft">
           {adding ? 'Adding…' : 'Add Account'}
         </button>
       </form>
@@ -148,7 +153,7 @@ export default function Staff() {
       ) : (
         <div className="space-y-2">
           {users.map(u => (
-            <div key={u.id} className="bg-white rounded-xl border border-slate-200 shadow-sm px-4 py-3">
+            <div key={u.id} className="bg-white rounded-2xl border border-slate-200/80 shadow-soft px-4 py-3">
               {resetId === u.id ? (
                 <form onSubmit={handleResetPassword} className="flex flex-wrap items-center gap-2">
                   <span className="text-sm font-medium text-slate-700 mr-1">{u.username}</span>
@@ -156,7 +161,7 @@ export default function Staff() {
                     onChange={e => setResetPw(e.target.value)}
                     placeholder="New password"
                     autoFocus
-                    className="border border-slate-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-40" />
+                    className="border border-slate-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-40 transition-colors" />
                   {resetError && <span className="text-rose-500 text-xs">{resetError}</span>}
                   <button type="submit" disabled={resetting}
                     className="text-xs bg-blue-600 text-white px-3 py-1.5 rounded-lg hover:bg-blue-500 disabled:opacity-50">

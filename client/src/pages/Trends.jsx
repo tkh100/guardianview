@@ -262,7 +262,7 @@ export default function Trends() {
                           { label: 'High', value: dayHigh ?? '--' },
                           { label: 'Low', value: dayLow ?? '--' },
                         ].map(({ label, value, color }) => (
-                          <div key={label} className="bg-white rounded-xl border border-slate-200 p-3 text-center">
+                          <div key={label} className="bg-white rounded-xl border border-slate-200/80 p-3 text-center">
                             <p className={`text-lg font-bold ${color ? '' : 'text-slate-800'} ${color || ''}`}>{value}</p>
                             <p className="text-xs text-slate-500 mt-0.5">{label}</p>
                           </div>
@@ -271,7 +271,7 @@ export default function Trends() {
                     )}
 
                     {/* Chart */}
-                    <div className="bg-white rounded-xl border border-slate-200 p-4 mb-4">
+                    <div className="bg-white rounded-xl border border-slate-200/80 p-4 mb-4">
                       <GlucoseChart
                         readings={dayReadings}
                         events={dayEvents}
@@ -281,7 +281,7 @@ export default function Trends() {
                     </div>
 
                     {/* Daily settings */}
-                    <div className="bg-white rounded-xl border border-slate-200 p-4">
+                    <div className="bg-white rounded-xl border border-slate-200/80 p-4">
                       <h3 className="font-semibold text-slate-700 text-sm mb-3">
                         Daily Settings — {formatDayTab(selectedDay)}
                       </h3>

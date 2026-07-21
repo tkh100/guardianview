@@ -1,5 +1,5 @@
 import {
-  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
+  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, ReferenceLine, ReferenceArea, Customized,
 } from 'recharts';
 
@@ -17,9 +17,9 @@ const CustomTooltip = ({ active, payload }) => {
   if (!active || !payload?.length) return null;
   const d = payload[0].payload;
   return (
-    <div className="bg-white border border-slate-200 rounded-lg shadow-lg px-3 py-2">
-      <p className="text-slate-500 text-xs">{formatTimeOnly(d.ts)}</p>
-      <p className="text-slate-800 font-bold text-lg">{d.value} <span className="text-xs font-normal text-slate-400">mg/dL</span></p>
+    <div className="bg-white/95 backdrop-blur border border-slate-200/80 rounded-xl shadow-card-hover px-3.5 py-2.5">
+      <p className="text-slate-400 text-xs font-medium">{formatTimeOnly(d.ts)}</p>
+      <p className="text-slate-800 font-bold text-xl tracking-tight">{d.value} <span className="text-xs font-normal text-slate-400">mg/dL</span></p>
     </div>
   );
 };
@@ -107,8 +107,11 @@ function EventBadges({ xAxisMap, yAxisMap, offset, events = [] }) {
 export default function GlucoseChart({ readings, events = [], targetLow = 70, targetHigh = 180 }) {
   if (!readings || readings.length === 0) {
     return (
-      <div className="flex items-center justify-center h-48 text-slate-400 text-sm">
-        No readings to display
+      <div className="flex flex-col items-center justify-center h-48 text-slate-300 gap-2">
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+          <path d="M3 17l4-6 4 3 4-8 4 5" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+        <span className="text-slate-400 text-sm font-medium">No readings to display</span>
       </div>
     );
   }
@@ -138,8 +141,14 @@ export default function GlucoseChart({ readings, events = [], targetLow = 70, ta
   return (
     <>
       <ResponsiveContainer width="100%" height={220}>
-        <LineChart data={data} margin={{ top: 22, right: 8, left: -20, bottom: 0 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+        <AreaChart data={data} margin={{ top: 22, right: 8, left: -20, bottom: 0 }}>
+          <defs>
+            <linearGradient id="glucoseFill" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor={getColor(avgVal)} stopOpacity={0.22} />
+              <stop offset="100%" stopColor={getColor(avgVal)} stopOpacity={0} />
+            </linearGradient>
+          </defs>
+          <CartesianGrid strokeDasharray="3 3" stroke="#eef2f7" vertical={false} />
           <XAxis
             dataKey="ts"
             type="number"
@@ -195,15 +204,16 @@ export default function GlucoseChart({ readings, events = [], targetLow = 70, ta
           {/* Positioned badges: carb pills + manual BG values */}
           <Customized component={(props) => <EventBadges {...props} events={events} />} />
 
-          <Line
+          <Area
             type="monotone"
             dataKey="value"
             stroke={getColor(avgVal)}
             strokeWidth={2.5}
+            fill="url(#glucoseFill)"
             dot={false}
-            activeDot={{ r: 4, fill: '#334155' }}
+            activeDot={{ r: 4.5, fill: '#334155', stroke: '#fff', strokeWidth: 2 }}
           />
-        </LineChart>
+        </AreaChart>
       </ResponsiveContainer>
 
       {/* Legend */}

@@ -595,7 +595,7 @@ export default function CamperDetail() {
       )}
 
       {/* Daily Settings */}
-      <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 md:p-5 mb-4">
+      <div className="bg-white rounded-2xl border border-slate-200/80 shadow-soft p-4 md:p-5 mb-4">
         <div className="flex items-center justify-between mb-3">
           <h2 className="font-semibold text-slate-700">Daily Settings</h2>
           <div className="flex items-center gap-2">
@@ -610,17 +610,17 @@ export default function CamperDetail() {
           <div>
             <label className="text-xs text-slate-500 block">ICR</label>
             <input type="number" step="0.1" value={dsIcr} onChange={e => setDsIcr(e.target.value)}
-              className="w-full border border-slate-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              className="w-full border border-slate-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors" />
           </div>
           <div>
             <label className="text-xs text-slate-500 block">ISF</label>
             <input type="number" step="1" value={dsIsf} onChange={e => setDsIsf(e.target.value)}
-              className="w-full border border-slate-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              className="w-full border border-slate-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors" />
           </div>
           <div>
             <label className="text-xs text-slate-500 block">Target BG</label>
             <input type="number" step="5" value={dsTarget} onChange={e => setDsTarget(e.target.value)}
-              className="w-full border border-slate-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              className="w-full border border-slate-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors" />
           </div>
         </div>
         {isPump ? (
@@ -633,12 +633,12 @@ export default function CamperDetail() {
             <div>
               <label className="text-xs text-slate-500 block">Long Acting AM</label>
               <input type="number" step="0.5" value={dsLaAm} onChange={e => setDsLaAm(e.target.value)}
-                className="w-full border border-slate-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                className="w-full border border-slate-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors" />
             </div>
             <div>
               <label className="text-xs text-slate-500 block">Long Acting BED</label>
               <input type="number" step="0.5" value={dsLaBed} onChange={e => setDsLaBed(e.target.value)}
-                className="w-full border border-slate-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                className="w-full border border-slate-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors" />
             </div>
           </div>
         )}
@@ -650,7 +650,7 @@ export default function CamperDetail() {
 
       {/* CGM Clinical Summary */}
       {total > 0 && (
-        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 md:p-5 mb-4">
+        <div className="bg-white rounded-2xl border border-slate-200/80 shadow-soft p-4 md:p-5 mb-4">
           {/* Header */}
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
@@ -742,20 +742,20 @@ export default function CamperDetail() {
       )}
 
       {/* Chart */}
-      <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 md:p-5 mb-4">
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="font-semibold text-slate-700">Glucose History</h2>
-          <div className="flex gap-1 flex-wrap justify-end">
+      <div className="bg-white rounded-2xl border border-slate-200/80 shadow-soft p-4 md:p-5 mb-4">
+        <div className="flex items-center justify-between mb-3 gap-2">
+          <h2 className="font-semibold text-slate-700 shrink-0">Glucose History</h2>
+          <div className="flex gap-1 overflow-x-auto no-scrollbar justify-end">
             {HOUR_TABS.map(h => (
               <button key={h} onClick={() => { setViewMode('hours'); setHours(h); }}
-                className={`px-2.5 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                className={`shrink-0 px-2.5 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                   viewMode === 'hours' && hours === h ? 'bg-slate-800 text-white' : 'text-slate-500 hover:bg-slate-100'
                 }`}>
                 {h}h
               </button>
             ))}
             <button onClick={() => setViewMode(m => m === 'daily' ? 'hours' : 'daily')}
-              className={`px-2.5 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+              className={`shrink-0 px-2.5 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                 viewMode === 'daily' ? 'bg-slate-800 text-white' : 'text-slate-500 hover:bg-slate-100'
               }`}>
               Daily
@@ -829,7 +829,7 @@ export default function CamperDetail() {
       )}
 
       {/* Treatment log */}
-      <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 md:p-5 mb-4">
+      <div className="bg-white rounded-2xl border border-slate-200/80 shadow-soft p-4 md:p-5 mb-4">
         <h2 className="font-semibold text-slate-700 mb-3">Log Treatment</h2>
 
         {/* Quick carb buttons */}
@@ -849,7 +849,7 @@ export default function CamperDetail() {
             <div>
               <label className="text-xs text-slate-500 mb-1 block">BG (fingerstick)</label>
               <input type="number" min="0" max="600" value={bgManual} onChange={e => setBgManual(e.target.value)} placeholder="mg/dL"
-                className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors" />
             </div>
             <div>
               <label className="text-xs text-slate-500 mb-1 block">Carbs (g)</label>
@@ -860,14 +860,14 @@ export default function CamperDetail() {
                     setCalcDose((parseFloat(e.target.value) / camper.carb_ratio).toFixed(1));
                   }
                 }}
-                placeholder="0" className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                placeholder="0" className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors" />
               {camper.carb_ratio && <p className="text-xs text-slate-400 mt-0.5">1:{camper.carb_ratio}</p>}
             </div>
             <div>
               <label className="text-xs text-slate-500 mb-1 block">Dose Given</label>
               <input type="number" min="0" max="99" step="0.1" value={doseGiven} onChange={e => setDoseGiven(e.target.value)}
                 onBlur={e => { const n = parseFloat(e.target.value); if (!isNaN(n)) setDoseGiven(n.toFixed(1)); }}
-                placeholder="0.0" className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                placeholder="0.0" className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors" />
             </div>
           </div>
 
@@ -884,19 +884,19 @@ export default function CamperDetail() {
                 <div>
                   <label className="text-xs text-slate-500 mb-1 block">Ketones</label>
                   <input type="number" min="0" max="10" step="0.1" value={ketones} onChange={e => setKetones(e.target.value)} placeholder="mmol/L"
-                    className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                    className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors" />
                 </div>
                 <div>
                   <label className="text-xs text-slate-500 mb-1 block">Calc Dose</label>
                   <input type="number" min="0" max="99" step="0.1" value={calcDose} onChange={e => setCalcDose(e.target.value)}
-                    placeholder="0.0" className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                    placeholder="0.0" className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors" />
                 </div>
               </div>
               {isPump && (
                 <div>
                   <label className="text-xs text-slate-500 mb-1 block">Basal Rate (u/hr)</label>
                   <input type="number" min="0" max="10" step="0.025" value={basalRate} onChange={e => setBasalRate(e.target.value)}
-                    placeholder="e.g. 0.65" className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                    placeholder="e.g. 0.65" className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors" />
                 </div>
               )}
               <div>
@@ -908,7 +908,7 @@ export default function CamperDetail() {
                   value={eventTime}
                   max={(() => { const n = new Date(); n.setSeconds(0,0); return new Date(n - n.getTimezoneOffset()*60000).toISOString().slice(0,16); })()}
                   onChange={e => setEventTime(e.target.value)}
-                  className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                 />
               </div>
               <div className="flex flex-wrap gap-4 py-1">
@@ -934,7 +934,7 @@ export default function CamperDetail() {
           {/* Note — visible only with medical access */}
           {hasMedAccess && (
             <input type="text" value={note} onChange={e => setNote(e.target.value)} placeholder="Medical note (staff only)" maxLength={200}
-              className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors" />
           )}
           <button type="submit" disabled={logging || (!bgManual && !ketones && !carbs && !calcDose && !doseGiven && !siteChange && !prebolus && !longActingGiven && !basalRate && !note.trim() && !mealType)}
             className="w-full py-2.5 rounded-lg text-sm font-medium bg-slate-800 text-white hover:bg-slate-700 disabled:opacity-40 transition-colors">
@@ -944,7 +944,7 @@ export default function CamperDetail() {
       </div>
 
       {/* Event history */}
-      <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 md:p-5">
+      <div className="bg-white rounded-2xl border border-slate-200/80 shadow-soft p-4 md:p-5">
         <h2 className="font-semibold text-slate-700 mb-1">Treatment History ({currentViewLabel})</h2>
         {displayedEvents.length === 0 ? (
           <p className="text-slate-400 text-sm py-4 text-center">No treatments logged</p>

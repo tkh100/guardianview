@@ -756,13 +756,15 @@ export default function Flowsheet() {
     <div className="p-4 md:p-6 max-w-7xl mx-auto">
       {/* Header */}
       <div className="flex flex-wrap items-center gap-3 mb-6">
-        <div className="flex items-center gap-2">
-          <CalendarDays className="text-blue-500 w-5 h-5" />
-          <h1 className="text-xl font-bold text-slate-800">Day Sheet</h1>
+        <div className="flex items-center gap-3">
+          <span className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center shadow-glow shrink-0">
+            <CalendarDays className="text-white w-[18px] h-[18px]" />
+          </span>
+          <h1 className="text-xl font-display font-bold text-slate-800 tracking-tight">Day Sheet</h1>
         </div>
 
         {/* Date navigator */}
-        <div className="flex items-center bg-white border rounded-lg overflow-hidden shadow-sm">
+        <div className="flex items-center bg-white border border-slate-200/80 rounded-lg overflow-hidden shadow-soft">
           <button
             onClick={() => setDate(d => addDays(d, -1))}
             className="p-2 hover:bg-slate-50 text-slate-500 transition-colors"
@@ -821,7 +823,7 @@ export default function Flowsheet() {
       {loading ? (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {[...Array(6)].map((_, i) => (
-            <div key={i} className="bg-white rounded-xl border border-slate-200 p-4 h-52 animate-pulse">
+            <div key={i} className="bg-white rounded-xl border border-slate-200/80 p-4 h-52 animate-pulse">
               <div className="h-4 bg-slate-100 rounded w-1/2 mb-2" />
               <div className="h-20 bg-slate-100 rounded mt-4" />
             </div>
