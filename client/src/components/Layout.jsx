@@ -38,7 +38,7 @@ export default function Layout() {
     }`;
 
   return (
-    <div className="flex h-screen overflow-hidden">
+    <div className="flex h-app-screen overflow-hidden">
       {/* Sidebar — desktop only */}
       <aside className="hidden md:flex w-56 bg-ink flex-col shrink-0 border-r border-pine-700/40">
         <div className="px-4 py-5 border-b border-pine-700/40 bg-gradient-to-b from-ink-700/60 to-transparent">

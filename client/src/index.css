@@ -29,6 +29,19 @@
   .no-scrollbar::-webkit-scrollbar { display: none; }
   .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
+  /*
+   * 100vh on mobile Safari is measured against the viewport with the address
+   * bar collapsed, which is taller than what's actually visible when it's
+   * showing (the default state). That inflates this container below the
+   * fold, dragging the fixed bottom nav down with it. dvh tracks the real
+   * visible viewport; vh stays as the fallback for browsers that don't
+   * parse dvh (the invalid line is simply ignored, leaving vh in effect).
+   */
+  .h-app-screen {
+    height: 100vh;
+    height: 100dvh;
+  }
+
   .skeleton {
     @apply bg-gradient-to-r from-slate-100 via-slate-200 to-slate-100;
     background-size: 200% 100%;
