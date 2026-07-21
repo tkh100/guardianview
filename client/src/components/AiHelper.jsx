@@ -7,14 +7,14 @@ function Message({ msg }) {
   return (
     <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} mb-3`}>
       {!isUser && (
-        <div className="w-7 h-7 rounded-full bg-blue-600 flex items-center justify-center shrink-0 mr-2 mt-0.5">
+        <div className="w-7 h-7 rounded-full bg-pine-500 flex items-center justify-center shrink-0 mr-2 mt-0.5">
           <Sparkles size={13} className="text-white" />
         </div>
       )}
       <div
         className={`max-w-[80%] px-3 py-2 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap ${
           isUser
-            ? 'bg-blue-600 text-white rounded-br-sm'
+            ? 'bg-pine-500 text-white rounded-br-sm'
             : 'bg-slate-100 text-slate-800 rounded-bl-sm'
         }`}
       >
@@ -94,7 +94,7 @@ export default function AiHelper() {
         onClick={() => setOpen(o => !o)}
         title="AI Assistant"
         className={`fixed bottom-24 right-4 md:bottom-6 z-40 w-12 h-12 rounded-full shadow-lg flex items-center justify-center transition-all ${
-          open ? 'bg-slate-700 text-white' : 'bg-blue-600 hover:bg-blue-700 text-white'
+          open ? 'bg-slate-700 text-white' : 'bg-pine-500 hover:bg-pine-400 text-white'
         }`}
       >
         {open ? <ChevronDown size={22} /> : <Sparkles size={22} />}
@@ -106,12 +106,12 @@ export default function AiHelper() {
           style={{ maxHeight: 'calc(100vh - 220px)' }}
         >
           {/* Header */}
-          <div className="flex items-center justify-between px-4 py-3 bg-blue-600 text-white shrink-0">
+          <div className="flex items-center justify-between px-4 py-3 bg-pine-500 text-white shrink-0">
             <div className="flex items-center gap-2">
               <Sparkles size={16} />
               <span className="font-semibold text-sm">GuardianView Assistant</span>
             </div>
-            <button onClick={() => setOpen(false)} className="hover:bg-blue-700 rounded-lg p-1 transition-colors">
+            <button onClick={() => setOpen(false)} className="hover:bg-pine-400 rounded-lg p-1 transition-colors">
               <X size={16} />
             </button>
           </div>
@@ -122,10 +122,10 @@ export default function AiHelper() {
 
             {loading && (
               <div className="flex items-center gap-2 mb-3 text-slate-400">
-                <div className="w-7 h-7 rounded-full bg-blue-600 flex items-center justify-center shrink-0">
+                <div className="w-7 h-7 rounded-full bg-pine-500 flex items-center justify-center shrink-0">
                   <Sparkles size={13} className="text-white" />
                 </div>
-                <Loader2 size={16} className="animate-spin text-blue-500" />
+                <Loader2 size={16} className="animate-spin text-pine-500" />
               </div>
             )}
 
@@ -145,7 +145,7 @@ export default function AiHelper() {
                 <button
                   key={s}
                   onClick={() => send(s)}
-                  className="text-xs bg-slate-100 hover:bg-blue-50 hover:text-blue-700 text-slate-600 px-2.5 py-1 rounded-full transition-colors border border-slate-200"
+                  className="text-xs bg-slate-100 hover:bg-pine-50 hover:text-pine-700 text-slate-600 px-2.5 py-1 rounded-full transition-colors border border-slate-200"
                 >
                   {s}
                 </button>
@@ -163,12 +163,12 @@ export default function AiHelper() {
               placeholder="Ask anything…"
               rows={1}
               style={{ resize: 'none' }}
-              className="flex-1 text-sm border border-slate-200/80 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 bg-slate-50 max-h-28 overflow-y-auto"
+              className="flex-1 text-sm border border-slate-200/80 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-pine-400 bg-slate-50 max-h-28 overflow-y-auto"
             />
             <button
               onClick={() => send()}
               disabled={!input.trim() || loading}
-              className="w-9 h-9 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:bg-slate-200 text-white disabled:text-slate-400 flex items-center justify-center transition-colors shrink-0"
+              className="w-9 h-9 rounded-xl bg-pine-500 hover:bg-pine-400 disabled:bg-slate-200 text-white disabled:text-slate-400 flex items-center justify-center transition-colors shrink-0"
             >
               <Send size={15} />
             </button>

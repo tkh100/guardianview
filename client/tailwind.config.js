@@ -19,16 +19,39 @@ export default {
           800: '#1e40af',
           900: '#1e3a8a',
         },
+        canvas: '#F7F5F0',
+        ink: {
+          DEFAULT: '#1F2A24',
+          800: '#243329',
+          700: '#2B3D31',
+        },
+        pine: {
+          50: '#EAF1EE',
+          100: '#D1E1DA',
+          300: '#7FA396',
+          400: '#4C7A6A',
+          500: '#2F5D50',
+          600: '#274F44',
+          700: '#1E3D35',
+        },
+        trail: {
+          50: '#FBF0E7',
+          200: '#EBC49E',
+          400: '#D6935C',
+          500: '#C97A3D',
+          600: '#B0632B',
+        },
+        birch: '#E8E2D3',
       },
       fontFamily: {
         sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
-        display: ['Lexend', 'Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        display: ['Fraunces', 'ui-serif', 'Georgia', 'serif'],
       },
       boxShadow: {
         soft: '0 1px 2px 0 rgb(15 23 42 / 0.04), 0 1px 3px 0 rgb(15 23 42 / 0.06)',
         card: '0 1px 2px 0 rgb(15 23 42 / 0.03), 0 4px 16px -4px rgb(15 23 42 / 0.08)',
         'card-hover': '0 2px 4px 0 rgb(15 23 42 / 0.04), 0 12px 28px -6px rgb(15 23 42 / 0.14)',
-        glow: '0 0 0 1px rgb(37 99 235 / 0.08), 0 8px 24px -8px rgb(37 99 235 / 0.35)',
+        glow: '0 0 0 1px rgb(47 93 80 / 0.10), 0 8px 24px -8px rgb(47 93 80 / 0.45)',
       },
       keyframes: {
         'fade-in': {

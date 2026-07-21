@@ -85,7 +85,7 @@ function BgCard({ camper, entry, onNext, onSkip, index, total }) {
           value={bg}
           onChange={e => setBg(e.target.value)}
           placeholder="—"
-          className="w-full border-2 border-slate-200 rounded-2xl px-4 py-5 text-4xl font-bold text-center focus:outline-none focus:border-blue-500 transition-colors"
+          className="w-full border-2 border-slate-200 rounded-2xl px-4 py-5 text-4xl font-bold text-center focus:outline-none focus:border-pine-400 transition-colors"
           autoFocus
         />
       </div>
@@ -100,7 +100,7 @@ function BgCard({ camper, entry, onNext, onSkip, index, total }) {
           Skip
         </button>
         <button onClick={() => onNext(bg)}
-          className="flex-[2] py-3.5 rounded-xl text-sm font-semibold bg-blue-600 text-white hover:bg-blue-700 transition-colors">
+          className="flex-[2] py-3.5 rounded-xl text-sm font-semibold bg-pine-500 text-white hover:bg-pine-400 transition-colors">
           Next →
         </button>
       </div>
@@ -160,16 +160,16 @@ function CarbsCard({ camper, entry, onNext, onSkip, index, total }) {
           value={carbs}
           onChange={e => setCarbs(e.target.value)}
           placeholder="0"
-          className="w-full border-2 border-slate-200 rounded-2xl px-4 py-5 text-4xl font-bold text-center focus:outline-none focus:border-blue-500 transition-colors"
+          className="w-full border-2 border-slate-200 rounded-2xl px-4 py-5 text-4xl font-bold text-center focus:outline-none focus:border-pine-400 transition-colors"
           autoFocus
         />
       </div>
 
       {/* Suggested dose */}
       {showCalc && (
-        <div className="bg-blue-50 border border-blue-100 rounded-2xl p-4">
-          <p className="text-xs font-semibold text-blue-400 uppercase tracking-wide text-center mb-2">Suggested dose</p>
-          <div className="space-y-1 text-sm text-blue-600 mb-2">
+        <div className="bg-pine-50 border border-pine-100 rounded-2xl p-4">
+          <p className="text-xs font-semibold text-pine-400 uppercase tracking-wide text-center mb-2">Suggested dose</p>
+          <div className="space-y-1 text-sm text-pine-600 mb-2">
             {icr && carbDose > 0 && (
               <div className="flex justify-between">
                 <span>Carbs ({carbs}g ÷ {icr})</span>
@@ -184,7 +184,7 @@ function CarbsCard({ camper, entry, onNext, onSkip, index, total }) {
             )}
           </div>
           <div className="text-center">
-            <span className="text-3xl font-bold text-blue-700">{totalCalc}u</span>
+            <span className="text-3xl font-bold text-pine-700">{totalCalc}u</span>
           </div>
         </div>
       )}
@@ -197,7 +197,7 @@ function CarbsCard({ camper, entry, onNext, onSkip, index, total }) {
           value={doseGiven}
           onChange={e => { setDoseGiven(e.target.value); setDoseManual(true); }}
           placeholder="0.0"
-          className="w-full border-2 border-slate-200 rounded-2xl px-4 py-4 text-3xl font-bold text-center focus:outline-none focus:border-blue-500 transition-colors"
+          className="w-full border-2 border-slate-200 rounded-2xl px-4 py-4 text-3xl font-bold text-center focus:outline-none focus:border-pine-400 transition-colors"
         />
       </div>
 
@@ -211,7 +211,7 @@ function CarbsCard({ camper, entry, onNext, onSkip, index, total }) {
           Skip
         </button>
         <button onClick={() => onNext(carbs, totalCalc > 0 ? String(totalCalc) : '', doseGiven)}
-          className="flex-[2] py-3.5 rounded-xl text-sm font-semibold bg-blue-600 text-white hover:bg-blue-700 transition-colors">
+          className="flex-[2] py-3.5 rounded-xl text-sm font-semibold bg-pine-500 text-white hover:bg-pine-400 transition-colors">
           Next →
         </button>
       </div>
@@ -345,7 +345,7 @@ export default function CabinView() {
       {/* Header */}
       <div className="flex items-center justify-between mb-4 gap-3">
         <div className="flex items-center gap-3 min-w-0">
-          <span className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center shadow-glow shrink-0">
+          <span className="w-10 h-10 rounded-xl bg-gradient-to-br from-pine-500 to-pine-700 flex items-center justify-center shadow-glow shrink-0">
             <Home size={18} className="text-white" />
           </span>
           <div className="min-w-0">
@@ -472,7 +472,7 @@ export default function CabinView() {
 
           {/* Progress bar */}
           <div className="h-1 bg-slate-100 shrink-0">
-            <div className={`h-full bg-blue-500 transition-all duration-300 ${
+            <div className={`h-full bg-pine-500 transition-all duration-300 ${
               phase === 'bg' ? 'w-1/3' : phase === 'carbs' ? 'w-2/3' : 'w-full'
             }`} />
           </div>
@@ -516,7 +516,7 @@ export default function CabinView() {
                     <h3 className="text-xl font-bold text-slate-800 mb-1">All Done!</h3>
                     <p className="text-slate-500 mb-6">Logged {loggedCount} camper{loggedCount !== 1 ? 's' : ''}</p>
                     <button onClick={closeRound}
-                      className="w-full py-3.5 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors">
+                      className="w-full py-3.5 bg-pine-500 text-white rounded-xl font-semibold hover:bg-pine-400 transition-colors">
                       Back to Cabin View
                     </button>
                   </div>

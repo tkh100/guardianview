@@ -28,22 +28,22 @@ export default function Layout() {
   const navClass = ({ isActive }) =>
     `flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
       isActive
-        ? 'bg-blue-600 text-white shadow-glow'
-        : 'text-slate-300 hover:bg-white/5 hover:text-white'
+        ? 'bg-pine-500 text-white shadow-glow'
+        : 'text-pine-100/80 hover:bg-white/5 hover:text-white'
     }`;
 
   const mobileNavClass = ({ isActive }) =>
     `shrink-0 snap-center flex flex-col items-center justify-center gap-1 min-w-[64px] px-2 py-2.5 text-[10px] font-medium whitespace-nowrap transition-colors ${
-      isActive ? 'text-blue-400' : 'text-slate-400 active:text-slate-200'
+      isActive ? 'text-trail-400' : 'text-pine-100/50 active:text-pine-100'
     }`;
 
   return (
     <div className="flex h-screen overflow-hidden">
       {/* Sidebar — desktop only */}
-      <aside className="hidden md:flex w-56 bg-slate-900 flex-col shrink-0 border-r border-slate-800/80">
-        <div className="px-4 py-5 border-b border-slate-800/80 bg-gradient-to-b from-slate-850/60 to-transparent">
+      <aside className="hidden md:flex w-56 bg-ink flex-col shrink-0 border-r border-pine-700/40">
+        <div className="px-4 py-5 border-b border-pine-700/40 bg-gradient-to-b from-ink-700/60 to-transparent">
           <div className="flex items-center gap-2.5">
-            <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-blue-700 shadow-glow shrink-0">
+            <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-pine-500 to-pine-700 shadow-glow shrink-0">
               <Shield className="text-white" size={18} />
             </span>
             <span className="text-white font-display font-bold text-lg tracking-tight">GuardianView</span>
@@ -51,8 +51,8 @@ export default function Layout() {
           {user && (
             <div className="flex items-center gap-1.5 mt-2.5">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />
-              <p className="text-slate-400 text-xs truncate">
-                <span className="text-slate-300 font-medium">{user.username}</span> · {user.role}
+              <p className="text-pine-100/60 text-xs truncate">
+                <span className="text-pine-50 font-medium">{user.username}</span> · {user.role}
               </p>
             </div>
           )}
@@ -88,17 +88,17 @@ export default function Layout() {
           )}
         </nav>
 
-        <div className="px-3 py-4 border-t border-slate-800/80 space-y-1">
+        <div className="px-3 py-4 border-t border-pine-700/40 space-y-1">
           <button
             onClick={toggleMute}
-            className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-slate-400 hover:text-white hover:bg-white/5 w-full transition-colors"
+            className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-pine-100/60 hover:text-white hover:bg-white/5 w-full transition-colors"
           >
-            {muted ? <VolumeX size={16} /> : <Volume2 size={16} className="text-blue-400" />}
+            {muted ? <VolumeX size={16} /> : <Volume2 size={16} className="text-trail-400" />}
             {muted ? 'Sound Off' : 'Sound On'}
           </button>
           <button
             onClick={logout}
-            className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-slate-400 hover:text-white hover:bg-white/5 w-full transition-colors"
+            className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-pine-100/60 hover:text-white hover:bg-white/5 w-full transition-colors"
           >
             <LogOut size={16} /> Sign out
           </button>
@@ -113,7 +113,7 @@ export default function Layout() {
       <AiHelper />
 
       {/* Bottom tab bar — mobile only. Horizontally scrollable so it never squeezes/wraps labels. */}
-      <div className="md:hidden fixed bottom-0 inset-x-0 z-50 bg-slate-900/95 backdrop-blur border-t border-slate-800">
+      <div className="md:hidden fixed bottom-0 inset-x-0 z-50 bg-ink/95 backdrop-blur border-t border-pine-700/40">
         <nav className="flex overflow-x-auto no-scrollbar snap-x pb-[env(safe-area-inset-bottom)]">
           <NavLink to="/cabin" className={mobileNavClass}>
             <Home size={20} />
@@ -151,14 +151,14 @@ export default function Layout() {
           )}
           <button
             onClick={logout}
-            className="shrink-0 snap-center flex flex-col items-center justify-center gap-1 min-w-[64px] px-2 py-2.5 text-[10px] font-medium text-slate-400 active:text-slate-200"
+            className="shrink-0 snap-center flex flex-col items-center justify-center gap-1 min-w-[64px] px-2 py-2.5 text-[10px] font-medium text-pine-100/50 active:text-pine-100"
           >
             <LogOut size={20} />
             <span>Sign out</span>
           </button>
         </nav>
         {/* Fade hint that the bar scrolls horizontally */}
-        <div className="pointer-events-none absolute right-0 bottom-0 top-0 w-8 bg-gradient-to-l from-slate-900 to-transparent" />
+        <div className="pointer-events-none absolute right-0 bottom-0 top-0 w-8 bg-gradient-to-l from-ink to-transparent" />
       </div>
     </div>
   );

@@ -128,7 +128,7 @@ export default function Dashboard() {
           {/* Header */}
           <div className="flex items-center justify-between mb-4 md:mb-6">
             <div className="flex items-center gap-2.5">
-              <span className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center shadow-glow shrink-0 md:hidden">
+              <span className="w-9 h-9 rounded-xl bg-gradient-to-br from-pine-500 to-pine-700 flex items-center justify-center shadow-glow shrink-0 md:hidden">
                 <ShieldCheck size={17} className="text-white" />
               </span>
               <div>
@@ -169,7 +169,7 @@ export default function Dashboard() {
                 placeholder="Search campers…"
                 value={search}
                 onChange={e => setSearch(e.target.value)}
-                className="w-full bg-white border border-slate-200 rounded-lg pl-9 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                className="w-full bg-white border border-slate-200 rounded-lg pl-9 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-pine-400 focus:border-pine-400 transition-colors"
               />
             </div>
             <div className="flex gap-1.5 flex-wrap overflow-x-auto no-scrollbar">

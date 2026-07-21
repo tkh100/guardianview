@@ -35,7 +35,7 @@ function getTirBadge(tir) {
   return 'bg-rose-100 text-rose-700';
 }
 
-const inputCls = 'w-full border border-slate-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500';
+const inputCls = 'w-full border border-slate-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-pine-400';
 
 export default function Trends() {
   const [trendsData, setTrendsData] = useState([]);
@@ -175,7 +175,7 @@ export default function Trends() {
                 <button
                   key={c.id}
                   onClick={() => setSelectedId(c.id)}
-                  className={`w-full text-left px-4 py-3 transition-colors hover:bg-slate-50 ${isSelected ? 'border-l-4 border-blue-500 bg-blue-50/50' : 'border-l-4 border-transparent'}`}
+                  className={`w-full text-left px-4 py-3 transition-colors hover:bg-slate-50 ${isSelected ? 'border-l-4 border-pine-500 bg-pine-50/50' : 'border-l-4 border-transparent'}`}
                 >
                   <div className="flex items-center justify-between mb-1">
                     <div>
@@ -243,7 +243,7 @@ export default function Trends() {
                     {availableDays.map(day => (
                       <button key={day} onClick={() => setSelectedDay(day)}
                         className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                          selectedDay === day ? 'bg-blue-600 text-white' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
+                          selectedDay === day ? 'bg-pine-500 text-white' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
                         }`}>
                         {formatDayTab(day)}
                       </button>

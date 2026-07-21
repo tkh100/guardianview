@@ -83,7 +83,7 @@ export default function Staff() {
   return (
     <div className="max-w-2xl mx-auto p-4 md:p-6">
       <div className="flex items-center gap-3 mb-6">
-        <span className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center shadow-glow shrink-0">
+        <span className="w-10 h-10 rounded-xl bg-gradient-to-br from-pine-500 to-pine-700 flex items-center justify-center shadow-glow shrink-0">
           <UserCog size={18} className="text-white" />
         </span>
         <div>
@@ -103,18 +103,18 @@ export default function Staff() {
             <label className="block text-xs text-slate-500 mb-1">Username *</label>
             <input required value={form.username} onChange={e => setForm(f => ({ ...f, username: e.target.value }))}
               autoComplete="off" placeholder="jsmith"
-              className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors" />
+              className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-pine-400 focus:border-pine-400 transition-colors" />
           </div>
           <div>
             <label className="block text-xs text-slate-500 mb-1">Password *</label>
             <input required type="password" value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
               autoComplete="new-password" placeholder="Min 6 characters"
-              className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors" />
+              className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-pine-400 focus:border-pine-400 transition-colors" />
           </div>
           <div>
             <label className="block text-xs text-slate-500 mb-1">Role *</label>
             <select value={form.role} onChange={e => setForm(f => ({ ...f, role: e.target.value }))}
-              className="w-full border border-slate-200 rounded-lg px-2 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors">
+              className="w-full border border-slate-200 rounded-lg px-2 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-pine-400 focus:border-pine-400 transition-colors">
               <option value="nurse">Med Staff — sees all campers</option>
               <option value="counselor">Counselor — sees their cabin</option>
               <option value="admin">Admin — full access</option>
@@ -124,7 +124,7 @@ export default function Staff() {
             <div>
               <label className="block text-xs text-slate-500 mb-1">Cabin / Group</label>
               <select value={form.cabin_group} onChange={e => setForm(f => ({ ...f, cabin_group: e.target.value }))}
-                className="w-full border border-slate-200 rounded-lg px-2 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors">
+                className="w-full border border-slate-200 rounded-lg px-2 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-pine-400 focus:border-pine-400 transition-colors">
                 <option value="">— select cabin —</option>
                 {CABIN_GROUPS.map(g => <option key={g} value={g}>{g}</option>)}
               </select>
@@ -142,7 +142,7 @@ export default function Staff() {
           )}
         </div>
         <button type="submit" disabled={adding}
-          className="mt-4 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-sm font-medium px-4 py-2 rounded-xl transition-colors shadow-soft">
+          className="mt-4 bg-pine-500 hover:bg-pine-400 disabled:opacity-50 text-white text-sm font-medium px-4 py-2 rounded-xl transition-colors shadow-soft">
           {adding ? 'Adding…' : 'Add Account'}
         </button>
       </form>
@@ -161,10 +161,10 @@ export default function Staff() {
                     onChange={e => setResetPw(e.target.value)}
                     placeholder="New password"
                     autoFocus
-                    className="border border-slate-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-40 transition-colors" />
+                    className="border border-slate-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-pine-400 focus:border-pine-400 w-40 transition-colors" />
                   {resetError && <span className="text-rose-500 text-xs">{resetError}</span>}
                   <button type="submit" disabled={resetting}
-                    className="text-xs bg-blue-600 text-white px-3 py-1.5 rounded-lg hover:bg-blue-500 disabled:opacity-50">
+                    className="text-xs bg-pine-500 text-white px-3 py-1.5 rounded-lg hover:bg-pine-400 disabled:opacity-50">
                     {resetting ? 'Saving…' : 'Save'}
                   </button>
                   <button type="button" onClick={() => { setResetId(null); setResetPw(''); setResetError(''); }}
@@ -192,7 +192,7 @@ export default function Staff() {
                   <div className="flex items-center gap-1 shrink-0">
                     <button onClick={() => { setResetId(u.id); setResetPw(''); setResetError(''); }}
                       title="Reset password"
-                      className="p-1.5 text-slate-400 hover:text-blue-600 transition-colors rounded">
+                      className="p-1.5 text-slate-400 hover:text-pine-600 transition-colors rounded">
                       <KeyRound size={15} />
                     </button>
                     {u.id !== me?.id && (

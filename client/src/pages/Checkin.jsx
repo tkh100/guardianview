@@ -11,13 +11,13 @@ function StepBar({ step, total }) {
   return (
     <div className="flex gap-1.5 mb-6">
       {Array.from({ length: total }, (_, i) => (
-        <div key={i} className={`h-1.5 flex-1 rounded-full transition-colors ${i < step ? 'bg-gradient-to-r from-blue-500 to-blue-600' : 'bg-slate-200'}`} />
+        <div key={i} className={`h-1.5 flex-1 rounded-full transition-colors ${i < step ? 'bg-gradient-to-r from-pine-400 to-pine-600' : 'bg-slate-200'}`} />
       ))}
     </div>
   );
 }
 
-const inputCls = 'w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500';
+const inputCls = 'w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-pine-400';
 const labelCls = 'text-xs text-slate-500 mb-1 block';
 
 export default function Checkin() {
@@ -144,7 +144,7 @@ export default function Checkin() {
           {!doneCabin && <div className="mb-6" />}
           <div className="flex flex-col gap-2">
             <button onClick={resetAll}
-              className="w-full py-3 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition-colors">
+              className="w-full py-3 bg-pine-500 text-white rounded-xl font-medium hover:bg-pine-400 transition-colors">
               Check In Another
             </button>
             <button onClick={() => navigate('/dashboard')}
@@ -192,7 +192,7 @@ export default function Checkin() {
             <div className="flex gap-2">
               {['pump', 'injection'].map(m => (
                 <button key={m} type="button" onClick={() => setS1(p => ({ ...p, delivery_method: m }))}
-                  className={`flex-1 py-2 rounded-lg text-sm font-medium border transition-colors capitalize ${s1.delivery_method === m ? 'bg-blue-600 text-white border-blue-600' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'}`}>
+                  className={`flex-1 py-2 rounded-lg text-sm font-medium border transition-colors capitalize ${s1.delivery_method === m ? 'bg-pine-500 text-white border-pine-500' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'}`}>
                   {m}
                 </button>
               ))}
@@ -216,7 +216,7 @@ export default function Checkin() {
             <p className="text-xs text-slate-400 text-center -mb-1">Enter a name above to continue</p>
           )}
           <button onClick={handleStep1} disabled={saving || !s1.name.trim()}
-            className="w-full py-3 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 disabled:opacity-40 transition-colors mt-2">
+            className="w-full py-3 bg-pine-500 text-white rounded-xl font-medium hover:bg-pine-400 disabled:opacity-40 transition-colors mt-2">
             {saving ? 'Saving...' : 'Next: Medical Profile'}
           </button>
         </div>
@@ -267,12 +267,12 @@ export default function Checkin() {
           <div>
             <label className={labelCls}>Profile Notes</label>
             <textarea value={s2.profile_notes} onChange={f2('profile_notes')} rows={2} placeholder="Any additional medical notes..."
-              className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none transition-colors" />
+              className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-pine-400 focus:border-pine-400 resize-none transition-colors" />
           </div>
           <div className="flex gap-2 mt-2">
             <button onClick={() => setStep(1)} className="flex-1 py-3 bg-white border border-slate-200/80 text-slate-700 rounded-xl font-medium hover:bg-slate-50 transition-colors">Back</button>
             <button onClick={handleStep2} disabled={saving}
-              className="flex-1 py-3 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 disabled:opacity-40 transition-colors">
+              className="flex-1 py-3 bg-pine-500 text-white rounded-xl font-medium hover:bg-pine-400 disabled:opacity-40 transition-colors">
               {saving ? 'Saving...' : 'Next: Registration'}
             </button>
           </div>
@@ -364,7 +364,7 @@ export default function Checkin() {
           <div className="flex gap-2 mt-2">
             <button onClick={() => setStep(2)} className="flex-1 py-3 bg-white border border-slate-200/80 text-slate-700 rounded-xl font-medium hover:bg-slate-50 transition-colors">Back</button>
             <button onClick={handleStep3} disabled={saving}
-              className="flex-1 py-3 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 disabled:opacity-40 transition-colors">
+              className="flex-1 py-3 bg-pine-500 text-white rounded-xl font-medium hover:bg-pine-400 disabled:opacity-40 transition-colors">
               {saving ? 'Saving...' : 'Next: CGM Setup'}
             </button>
           </div>
@@ -379,7 +379,7 @@ export default function Checkin() {
             <div className="flex gap-2">
               {['dexcom', 'nightscout', 'libre'].map(p => (
                 <button key={p} type="button" onClick={() => setCgmProvider(p)}
-                  className={`flex-1 py-2 rounded-lg text-sm font-medium border transition-colors capitalize ${cgmProvider === p ? 'bg-blue-600 text-white border-blue-600' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'}`}>
+                  className={`flex-1 py-2 rounded-lg text-sm font-medium border transition-colors capitalize ${cgmProvider === p ? 'bg-pine-500 text-white border-pine-500' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'}`}>
                   {p === 'nightscout' ? 'Nightscout' : p.charAt(0).toUpperCase() + p.slice(1)}
                 </button>
               ))}
@@ -392,7 +392,7 @@ export default function Checkin() {
               <div className="flex gap-2">
                 {['publisher', 'follower'].map(m => (
                   <button key={m} type="button" onClick={() => setCgmAuthMode(m)}
-                    className={`flex-1 py-2 rounded-lg text-sm font-medium border transition-colors capitalize ${cgmAuthMode === m ? 'bg-blue-600 text-white border-blue-600' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'}`}>
+                    className={`flex-1 py-2 rounded-lg text-sm font-medium border transition-colors capitalize ${cgmAuthMode === m ? 'bg-pine-500 text-white border-pine-500' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'}`}>
                     {m}
                   </button>
                 ))}
@@ -437,7 +437,7 @@ export default function Checkin() {
           <div className="flex gap-2 mt-2">
             <button onClick={() => setStep(3)} className="py-3 px-4 bg-white border border-slate-200/80 text-slate-700 rounded-xl font-medium hover:bg-slate-50 transition-colors">Back</button>
             <button onClick={handleStep4} disabled={saving}
-              className="flex-1 py-3 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 disabled:opacity-40 transition-colors">
+              className="flex-1 py-3 bg-pine-500 text-white rounded-xl font-medium hover:bg-pine-400 disabled:opacity-40 transition-colors">
               {saving ? 'Connecting...' : 'Connect & Finish'}
             </button>
           </div>

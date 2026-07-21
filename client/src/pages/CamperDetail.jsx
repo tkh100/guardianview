@@ -196,7 +196,7 @@ function DayCard({ day, readings, events, camper, onSelect, selected }) {
   return (
     <button
       onClick={() => onSelect(day)}
-      className={`text-left rounded-xl border p-3 transition-all w-full ${selected ? 'border-blue-400 bg-blue-50 ring-2 ring-blue-200' : 'border-slate-200 bg-white hover:border-slate-300 hover:shadow-sm'}`}
+      className={`text-left rounded-xl border p-3 transition-all w-full ${selected ? 'border-pine-400 bg-pine-50 ring-2 ring-pine-200' : 'border-slate-200 bg-white hover:border-slate-300 hover:shadow-sm'}`}
     >
       <div className="flex items-center justify-between mb-2">
         <span className="text-sm font-semibold text-slate-700">{dateLabel}</span>
@@ -578,7 +578,7 @@ export default function CamperDetail() {
       {medReminders.filter(r => !r.logged).length > 0 && (
         <div className="space-y-2 mb-4">
           {medReminders.filter(r => !r.logged).map(r => (
-            <div key={r.slot} className={`rounded-xl p-3 flex items-center justify-between ${r.isMissed ? 'bg-rose-50 border border-rose-200' : 'bg-blue-50 border border-blue-200'}`}>
+            <div key={r.slot} className={`rounded-xl p-3 flex items-center justify-between ${r.isMissed ? 'bg-rose-50 border border-rose-200' : 'bg-pine-50 border border-pine-200'}`}>
               <div>
                 <p className={`text-sm font-medium ${r.isMissed ? 'text-rose-700' : 'text-blue-700'}`}>
                   <Pill size={14} className="inline mr-1.5" />
@@ -586,7 +586,7 @@ export default function CamperDetail() {
                 </p>
               </div>
               <button onClick={() => handleMedGiven(r.slot)} disabled={logging}
-                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${r.isMissed ? 'bg-rose-600 text-white hover:bg-rose-700' : 'bg-blue-600 text-white hover:bg-blue-700'} disabled:opacity-50`}>
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${r.isMissed ? 'bg-rose-600 text-white hover:bg-rose-700' : 'bg-pine-500 text-white hover:bg-pine-400'} disabled:opacity-50`}>
                 {r.isMissed ? 'Give Now' : 'Given'}
               </button>
             </div>
@@ -610,17 +610,17 @@ export default function CamperDetail() {
           <div>
             <label className="text-xs text-slate-500 block">ICR</label>
             <input type="number" step="0.1" value={dsIcr} onChange={e => setDsIcr(e.target.value)}
-              className="w-full border border-slate-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors" />
+              className="w-full border border-slate-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-pine-400 focus:border-pine-400 transition-colors" />
           </div>
           <div>
             <label className="text-xs text-slate-500 block">ISF</label>
             <input type="number" step="1" value={dsIsf} onChange={e => setDsIsf(e.target.value)}
-              className="w-full border border-slate-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors" />
+              className="w-full border border-slate-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-pine-400 focus:border-pine-400 transition-colors" />
           </div>
           <div>
             <label className="text-xs text-slate-500 block">Target BG</label>
             <input type="number" step="5" value={dsTarget} onChange={e => setDsTarget(e.target.value)}
-              className="w-full border border-slate-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors" />
+              className="w-full border border-slate-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-pine-400 focus:border-pine-400 transition-colors" />
           </div>
         </div>
         {isPump ? (
@@ -633,12 +633,12 @@ export default function CamperDetail() {
             <div>
               <label className="text-xs text-slate-500 block">Long Acting AM</label>
               <input type="number" step="0.5" value={dsLaAm} onChange={e => setDsLaAm(e.target.value)}
-                className="w-full border border-slate-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors" />
+                className="w-full border border-slate-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-pine-400 focus:border-pine-400 transition-colors" />
             </div>
             <div>
               <label className="text-xs text-slate-500 block">Long Acting BED</label>
               <input type="number" step="0.5" value={dsLaBed} onChange={e => setDsLaBed(e.target.value)}
-                className="w-full border border-slate-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors" />
+                className="w-full border border-slate-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-pine-400 focus:border-pine-400 transition-colors" />
             </div>
           </div>
         )}
@@ -768,7 +768,7 @@ export default function CamperDetail() {
             {availableDays.map(day => (
               <button key={day} onClick={() => setSelectedDay(day)}
                 className={`px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                  selectedDay === day ? 'bg-blue-600 text-white' : 'text-slate-500 hover:bg-slate-100 border border-slate-200'
+                  selectedDay === day ? 'bg-pine-500 text-white' : 'text-slate-500 hover:bg-slate-100 border border-slate-200'
                 }`}>
                 {formatDayButton(day)}
               </button>
@@ -849,7 +849,7 @@ export default function CamperDetail() {
             <div>
               <label className="text-xs text-slate-500 mb-1 block">BG (fingerstick)</label>
               <input type="number" min="0" max="600" value={bgManual} onChange={e => setBgManual(e.target.value)} placeholder="mg/dL"
-                className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors" />
+                className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-pine-400 focus:border-pine-400 transition-colors" />
             </div>
             <div>
               <label className="text-xs text-slate-500 mb-1 block">Carbs (g)</label>
@@ -860,14 +860,14 @@ export default function CamperDetail() {
                     setCalcDose((parseFloat(e.target.value) / camper.carb_ratio).toFixed(1));
                   }
                 }}
-                placeholder="0" className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors" />
+                placeholder="0" className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-pine-400 focus:border-pine-400 transition-colors" />
               {camper.carb_ratio && <p className="text-xs text-slate-400 mt-0.5">1:{camper.carb_ratio}</p>}
             </div>
             <div>
               <label className="text-xs text-slate-500 mb-1 block">Dose Given</label>
               <input type="number" min="0" max="99" step="0.1" value={doseGiven} onChange={e => setDoseGiven(e.target.value)}
                 onBlur={e => { const n = parseFloat(e.target.value); if (!isNaN(n)) setDoseGiven(n.toFixed(1)); }}
-                placeholder="0.0" className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors" />
+                placeholder="0.0" className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-pine-400 focus:border-pine-400 transition-colors" />
             </div>
           </div>
 
@@ -884,19 +884,19 @@ export default function CamperDetail() {
                 <div>
                   <label className="text-xs text-slate-500 mb-1 block">Ketones</label>
                   <input type="number" min="0" max="10" step="0.1" value={ketones} onChange={e => setKetones(e.target.value)} placeholder="mmol/L"
-                    className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors" />
+                    className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-pine-400 focus:border-pine-400 transition-colors" />
                 </div>
                 <div>
                   <label className="text-xs text-slate-500 mb-1 block">Calc Dose</label>
                   <input type="number" min="0" max="99" step="0.1" value={calcDose} onChange={e => setCalcDose(e.target.value)}
-                    placeholder="0.0" className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors" />
+                    placeholder="0.0" className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-pine-400 focus:border-pine-400 transition-colors" />
                 </div>
               </div>
               {isPump && (
                 <div>
                   <label className="text-xs text-slate-500 mb-1 block">Basal Rate (u/hr)</label>
                   <input type="number" min="0" max="10" step="0.025" value={basalRate} onChange={e => setBasalRate(e.target.value)}
-                    placeholder="e.g. 0.65" className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors" />
+                    placeholder="e.g. 0.65" className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-pine-400 focus:border-pine-400 transition-colors" />
                 </div>
               )}
               <div>
@@ -908,7 +908,7 @@ export default function CamperDetail() {
                   value={eventTime}
                   max={(() => { const n = new Date(); n.setSeconds(0,0); return new Date(n - n.getTimezoneOffset()*60000).toISOString().slice(0,16); })()}
                   onChange={e => setEventTime(e.target.value)}
-                  className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                  className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-pine-400 focus:border-pine-400 transition-colors"
                 />
               </div>
               <div className="flex flex-wrap gap-4 py-1">
@@ -934,7 +934,7 @@ export default function CamperDetail() {
           {/* Note — visible only with medical access */}
           {hasMedAccess && (
             <input type="text" value={note} onChange={e => setNote(e.target.value)} placeholder="Medical note (staff only)" maxLength={200}
-              className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors" />
+              className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-pine-400 focus:border-pine-400 transition-colors" />
           )}
           <button type="submit" disabled={logging || (!bgManual && !ketones && !carbs && !calcDose && !doseGiven && !siteChange && !prebolus && !longActingGiven && !basalRate && !note.trim() && !mealType)}
             className="w-full py-2.5 rounded-lg text-sm font-medium bg-slate-800 text-white hover:bg-slate-700 disabled:opacity-40 transition-colors">

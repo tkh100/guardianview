@@ -757,7 +757,7 @@ export default function Flowsheet() {
       {/* Header */}
       <div className="flex flex-wrap items-center gap-3 mb-6">
         <div className="flex items-center gap-3">
-          <span className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center shadow-glow shrink-0">
+          <span className="w-10 h-10 rounded-xl bg-gradient-to-br from-pine-500 to-pine-700 flex items-center justify-center shadow-glow shrink-0">
             <CalendarDays className="text-white w-[18px] h-[18px]" />
           </span>
           <h1 className="text-xl font-display font-bold text-slate-800 tracking-tight">Day Sheet</h1>

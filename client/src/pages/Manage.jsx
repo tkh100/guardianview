@@ -49,7 +49,7 @@ function Input({ label, hint, ...props }) {
     <div>
       <label className="block text-xs text-slate-500 mb-1">{label}</label>
       <input {...props}
-        className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors" />
+        className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-pine-400 focus:border-pine-400 transition-colors" />
       {hint && <p className="text-xs text-slate-400 mt-0.5">{hint}</p>}
     </div>
   );
@@ -113,7 +113,7 @@ function AddCamperForm({ onAdd }) {
         <div>
           <label className="block text-xs text-slate-500 mb-1">Cabin / Group</label>
           <select value={form.cabin_group} onChange={e => set('cabin_group', e.target.value)}
-            className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors">
+            className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-pine-400 focus:border-pine-400 transition-colors">
             <option value="">— select cabin —</option>
             {CABIN_GROUPS.map(g => <option key={g} value={g}>{g}</option>)}
           </select>
@@ -179,7 +179,7 @@ function AddCamperForm({ onAdd }) {
         <div className="mt-3">
           <label className="block text-xs text-slate-500 mb-1">Activity Level</label>
           <select value={form.activity_level} onChange={e => set('activity_level', e.target.value)}
-            className="w-full border border-slate-200 rounded-lg px-2 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors">
+            className="w-full border border-slate-200 rounded-lg px-2 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-pine-400 focus:border-pine-400 transition-colors">
             <option value="low">Low</option>
             <option value="moderate">Moderate</option>
             <option value="high">High</option>
@@ -233,7 +233,7 @@ function AddCamperForm({ onAdd }) {
           <div>
             <label className="block text-xs text-slate-500 mb-1">CGM Device</label>
             <select value={form.cgm_provider} onChange={e => set('cgm_provider', e.target.value)}
-              className="w-full border border-slate-200 rounded-lg px-2 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors">
+              className="w-full border border-slate-200 rounded-lg px-2 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-pine-400 focus:border-pine-400 transition-colors">
               {PROVIDERS.map(p => <option key={p} value={p}>{p.charAt(0).toUpperCase() + p.slice(1)}</option>)}
             </select>
           </div>
@@ -241,7 +241,7 @@ function AddCamperForm({ onAdd }) {
             <div>
               <label className="block text-xs text-slate-500 mb-1">Access Mode</label>
               <select value={form.cgm_auth_mode} onChange={e => set('cgm_auth_mode', e.target.value)}
-                className="w-full border border-slate-200 rounded-lg px-2 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors">
+                className="w-full border border-slate-200 rounded-lg px-2 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-pine-400 focus:border-pine-400 transition-colors">
                 <option value="publisher">Direct (camper's account)</option>
                 <option value="follower">Follow (camp follows camper)</option>
               </select>
@@ -254,7 +254,7 @@ function AddCamperForm({ onAdd }) {
           )}
           {form.cgm_auth_mode === 'follower' ? (
             <div className="col-span-2">
-              <p className="text-xs text-slate-500 bg-blue-50 border border-blue-200 rounded-lg px-3 py-2">
+              <p className="text-xs text-slate-500 bg-pine-50 border border-pine-200 rounded-lg px-3 py-2">
                 Follower mode uses the camp's Dexcom follower account configured in server env vars.
               </p>
             </div>
@@ -266,7 +266,7 @@ function AddCamperForm({ onAdd }) {
               <div>
                 <label className="block text-xs text-slate-500 mb-1">{form.cgm_provider === 'nightscout' ? 'API Secret' : 'Password'}</label>
                 <input type="password" value={form.cgm_password} onChange={e => set('cgm_password', e.target.value)} autoComplete="new-password"
-                  className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors" />
+                  className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-pine-400 focus:border-pine-400 transition-colors" />
               </div>
             </>
           )}
@@ -274,7 +274,7 @@ function AddCamperForm({ onAdd }) {
       </div>
 
       <button type="submit" disabled={loading}
-        className="mt-5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-sm font-medium px-4 py-2 rounded-xl transition-colors shadow-soft">
+        className="mt-5 bg-pine-500 hover:bg-pine-400 disabled:opacity-50 text-white text-sm font-medium px-4 py-2 rounded-xl transition-colors shadow-soft">
         {loading ? status || 'Saving...' : hasCgm ? 'Add & Connect' : 'Add Camper'}
       </button>
     </form>
@@ -310,7 +310,7 @@ function ConnectCGMForm({ camper, onConnect, onClose }) {
           <label className="block text-xs text-slate-500 mb-1">CGM Device</label>
           <select value={form.cgm_provider}
             onChange={e => setForm(f => ({ ...f, cgm_provider: e.target.value, cgm_auth_mode: 'publisher' }))}
-            className="w-full border border-slate-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors">
+            className="w-full border border-slate-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-pine-400 focus:border-pine-400 transition-colors">
             {PROVIDERS.map(p => <option key={p} value={p}>{p.charAt(0).toUpperCase() + p.slice(1)}</option>)}
           </select>
         </div>
@@ -319,7 +319,7 @@ function ConnectCGMForm({ camper, onConnect, onClose }) {
             <label className="block text-xs text-slate-500 mb-1">Access Mode</label>
             <select value={form.cgm_auth_mode}
               onChange={e => setForm(f => ({ ...f, cgm_auth_mode: e.target.value }))}
-              className="w-full border border-slate-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors">
+              className="w-full border border-slate-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-pine-400 focus:border-pine-400 transition-colors">
               <option value="publisher">Direct (camper's account)</option>
               <option value="follower">Follow (camp follows camper)</option>
             </select>
@@ -332,24 +332,24 @@ function ConnectCGMForm({ camper, onConnect, onClose }) {
             <div>
               <label className="block text-xs text-slate-500 mb-1">Username / Email</label>
               <input value={form.cgm_username} onChange={e => setForm(f => ({ ...f, cgm_username: e.target.value }))} autoComplete="off"
-                className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors" />
+                className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-pine-400 focus:border-pine-400 transition-colors" />
             </div>
           )}
           <div>
             <label className="block text-xs text-slate-500 mb-1">{form.cgm_provider === 'nightscout' ? 'API Secret' : 'Password'}</label>
             <input type="password" value={form.cgm_password} onChange={e => setForm(f => ({ ...f, cgm_password: e.target.value }))} autoComplete="new-password"
-              className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors" />
+              className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-pine-400 focus:border-pine-400 transition-colors" />
           </div>
         </div>
       )}
       {form.cgm_auth_mode === 'follower' && (
-        <p className="text-xs text-slate-500 mb-3 bg-blue-50 border border-blue-200 rounded-lg px-3 py-2">
+        <p className="text-xs text-slate-500 mb-3 bg-pine-50 border border-pine-200 rounded-lg px-3 py-2">
           Follower mode uses the camp's Dexcom follower account (configured in server env vars).
         </p>
       )}
       <div className="flex gap-2">
         <button type="submit" disabled={loading}
-          className="bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-xs font-medium px-4 py-2 rounded-lg transition-colors">
+          className="bg-pine-500 hover:bg-pine-400 disabled:opacity-50 text-white text-xs font-medium px-4 py-2 rounded-lg transition-colors">
           {loading ? 'Verifying...' : 'Verify & Save'}
         </button>
         <button type="button" onClick={onClose} className="text-slate-500 hover:text-slate-700 text-xs px-3 py-2 transition-colors">Cancel</button>
@@ -397,25 +397,25 @@ function CamperRow({ camper, onUpdate, onDelete }) {
           {editing ? (
             <form onSubmit={saveEdit} className="flex flex-wrap gap-2 items-center">
               <input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
-                className="border border-slate-200 rounded px-2 py-1 text-sm w-36 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors" required />
+                className="border border-slate-200 rounded px-2 py-1 text-sm w-36 focus:outline-none focus:ring-2 focus:ring-pine-400 focus:border-pine-400 transition-colors" required />
               <select value={form.cabin_group} onChange={e => setForm(f => ({ ...f, cabin_group: e.target.value }))}
-                className="border border-slate-200 rounded px-1 py-1 text-sm w-24 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors">
+                className="border border-slate-200 rounded px-1 py-1 text-sm w-24 focus:outline-none focus:ring-2 focus:ring-pine-400 focus:border-pine-400 transition-colors">
                 <option value="">—</option>
                 {CABIN_GROUPS.map(g => <option key={g} value={g}>{g}</option>)}
               </select>
               <select value={form.delivery_method} onChange={e => setForm(f => ({ ...f, delivery_method: e.target.value }))}
-                className="border border-slate-200 rounded px-1 py-1 text-sm w-24 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors">
+                className="border border-slate-200 rounded px-1 py-1 text-sm w-24 focus:outline-none focus:ring-2 focus:ring-pine-400 focus:border-pine-400 transition-colors">
                 <option value="pump">Pump</option>
                 <option value="injection">Injection</option>
               </select>
               <input type="number" value={form.target_low} min={50} max={100}
                 onChange={e => setForm(f => ({ ...f, target_low: parseInt(e.target.value) }))}
-                className="border border-slate-200 rounded px-2 py-1 text-sm w-16 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors" />
+                className="border border-slate-200 rounded px-2 py-1 text-sm w-16 focus:outline-none focus:ring-2 focus:ring-pine-400 focus:border-pine-400 transition-colors" />
               <span className="text-slate-400 text-xs">-</span>
               <input type="number" value={form.target_high} min={150} max={300}
                 onChange={e => setForm(f => ({ ...f, target_high: parseInt(e.target.value) }))}
-                className="border border-slate-200 rounded px-2 py-1 text-sm w-16 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors" />
-              <button type="submit" className="text-xs bg-blue-600 text-white px-3 py-1 rounded transition-colors hover:bg-blue-500">Save</button>
+                className="border border-slate-200 rounded px-2 py-1 text-sm w-16 focus:outline-none focus:ring-2 focus:ring-pine-400 focus:border-pine-400 transition-colors" />
+              <button type="submit" className="text-xs bg-pine-500 text-white px-3 py-1 rounded transition-colors hover:bg-pine-400">Save</button>
               <button type="button" onClick={() => setEditing(false)} className="text-xs text-slate-400 px-2 py-1">Cancel</button>
             </form>
           ) : (
@@ -438,7 +438,7 @@ function CamperRow({ camper, onUpdate, onDelete }) {
         </div>
         <div className="flex items-center gap-1 shrink-0">
           <button onClick={() => { setConnecting(c => !c); setEditing(false); }} title="Connect CGM"
-            className="p-1.5 text-slate-400 hover:text-blue-600 transition-colors rounded">
+            className="p-1.5 text-slate-400 hover:text-pine-600 transition-colors rounded">
             {camper.cgm_connected ? <Wifi size={15} /> : <WifiOff size={15} />}
           </button>
           {camper.cgm_connected && (
@@ -506,7 +506,7 @@ export default function Manage() {
   return (
     <div className="max-w-3xl mx-auto p-4 md:p-6">
       <div className="flex items-center gap-3 mb-6">
-        <span className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center shadow-glow shrink-0">
+        <span className="w-10 h-10 rounded-xl bg-gradient-to-br from-pine-500 to-pine-700 flex items-center justify-center shadow-glow shrink-0">
           <Users size={18} className="text-white" />
         </span>
         <div>
@@ -519,7 +519,7 @@ export default function Manage() {
 
       <div className="mb-4 relative w-full sm:w-64">
         <input type="search" placeholder="Search campers..." value={search} onChange={e => setSearch(e.target.value)}
-          className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors" />
+          className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-pine-400 focus:border-pine-400 transition-colors" />
       </div>
 
       {loading ? (
