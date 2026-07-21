@@ -10,6 +10,47 @@ function getUser() {
   try { return JSON.parse(localStorage.getItem('gv_user') || 'null'); } catch { return null; }
 }
 
+function syncTimeAgo(iso) {
+  if (!iso) return 'never';
+  const mins = Math.round((Date.now() - new Date(iso)) / 60_000);
+  if (mins < 1) return 'just now';
+  if (mins < 60) return `${mins}m ago`;
+  return `${Math.round(mins / 60)}h ago`;
+}
+
+function SyncStatusPill({ status, isAdmin, onSyncNow, syncing }) {
+  if (!status) return null;
+  const hasErrors = status.errors > 0;
+  const theme = hasErrors
+    ? 'bg-amber-100 text-amber-700 hover:bg-amber-200'
+    : 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200';
+  const dot = hasErrors ? 'bg-amber-500' : 'bg-emerald-500';
+  const label = `${status.connected}/${status.total} connected · synced ${syncTimeAgo(status.lastSync)}` +
+    (hasErrors ? ` · ${status.errors} error${status.errors !== 1 ? 's' : ''}` : '');
+
+  if (!isAdmin) {
+    return (
+      <span className={`hidden sm:flex items-center gap-1.5 text-xs font-medium px-2.5 py-1.5 rounded-lg ${hasErrors ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'}`}>
+        <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${dot}`} />
+        {label}
+      </span>
+    );
+  }
+
+  return (
+    <button
+      onClick={onSyncNow}
+      disabled={syncing}
+      title="Trigger a live CGM sync for every connected camper now"
+      className={`flex items-center gap-1.5 text-xs font-medium px-2.5 py-1.5 rounded-lg transition-colors disabled:opacity-50 ${theme}`}
+    >
+      {syncing ? <RefreshCw size={12} className="animate-spin shrink-0" /> : <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${dot}`} />}
+      <span className="hidden sm:inline">{syncing ? 'Syncing all campers…' : label}</span>
+      <span className="sm:hidden">{hasErrors ? `${status.errors} sync error${status.errors !== 1 ? 's' : ''}` : 'Sync all'}</span>
+    </button>
+  );
+}
+
 const STAT_THEMES = {
   slate:   { icon: 'bg-slate-100 text-slate-500', value: 'text-slate-800' },
   emerald: { icon: 'bg-emerald-100 text-emerald-600', value: 'text-emerald-600' },
@@ -64,6 +105,8 @@ export default function Dashboard() {
     user?.role === 'counselor' ? (user.cabin_group || 'all') : 'all'
   );
   const [search, setSearch] = useState('');
+  const [syncStatus, setSyncStatus] = useState(null);
+  const [syncing, setSyncing] = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -80,16 +123,39 @@ export default function Dashboard() {
     }
   }, [groupFilter]);
 
+  const loadSyncStatus = useCallback(async () => {
+    try {
+      setSyncStatus(await api.getSyncStatus());
+    } catch (e) {
+      console.error(e);
+    }
+  }, []);
+
   useEffect(() => { load(); }, [load]);
+  useEffect(() => { loadSyncStatus(); }, [loadSyncStatus]);
+
+  async function handleSyncNow() {
+    setSyncing(true);
+    try {
+      await api.runSync();
+      // The sync runs in the background on the server; give it a few seconds
+      // to make progress before refreshing readings and status.
+      setTimeout(() => { load(); loadSyncStatus(); }, 5000);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setSyncing(false);
+    }
+  }
 
   // Audio alerts for critical BG
   useAudioAlerts(alerts);
 
   // Auto-refresh every 60s
   useEffect(() => {
-    const t = setInterval(load, 60_000);
+    const t = setInterval(() => { load(); loadSyncStatus(); }, 60_000);
     return () => clearInterval(t);
-  }, [load]);
+  }, [load, loadSyncStatus]);
 
   // Stats
   const total = campers.length;
@@ -136,12 +202,21 @@ export default function Dashboard() {
                 <p className="text-slate-500 text-sm">{total} camper{total !== 1 ? 's' : ''} monitored</p>
               </div>
             </div>
-            <button
-              onClick={load}
-              className="flex items-center gap-2 text-sm text-slate-500 hover:text-slate-800 hover:bg-white transition-colors p-2 -mr-2 rounded-lg"
-            >
-              <RefreshCw size={15} /> <span className="hidden sm:inline">Refresh</span>
-            </button>
+            <div className="flex items-center gap-2 shrink-0">
+              <SyncStatusPill
+                status={syncStatus}
+                isAdmin={user?.role === 'admin'}
+                onSyncNow={handleSyncNow}
+                syncing={syncing}
+              />
+              <button
+                onClick={load}
+                title="Reload the page's data from the database"
+                className="flex items-center gap-2 text-sm text-slate-500 hover:text-slate-800 hover:bg-white transition-colors p-2 -mr-2 rounded-lg"
+              >
+                <RefreshCw size={15} /> <span className="hidden sm:inline">Refresh</span>
+              </button>
+            </div>
           </div>
 
           {/* Stats */}
