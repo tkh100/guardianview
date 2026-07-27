@@ -18,7 +18,9 @@ export default function Login() {
       const { token, user } = await api.login(username, password);
       localStorage.setItem('gv_token', token);
       localStorage.setItem('gv_user', JSON.stringify(user));
-      navigate('/dashboard');
+      // Land counselors on their cabin, everyone else on the dashboard —
+      // same routing DefaultRedirect applies on a fresh visit.
+      navigate(user.role === 'counselor' ? '/cabin' : '/dashboard');
     } catch (err) {
       setError(err.message);
     } finally {

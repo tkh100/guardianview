@@ -237,6 +237,10 @@ export default function CamperDetail() {
   const navigate = useNavigate();
   const user = getCurrentUser();
   const hasMedAccess = user?.medical_access || user?.role === 'admin' || user?.role === 'nurse';
+  // Strictly admin/nurse — matches the server's requireRole on daily settings,
+  // event deletion, and flowsheet export. medical_access counselors can view
+  // notes (hasMedAccess) but cannot use these endpoints.
+  const isMedStaff = user?.role === 'admin' || user?.role === 'nurse';
 
   const [camper, setCamper] = useState(null);
   const [readings, setReadings] = useState([]);
@@ -448,8 +452,10 @@ export default function CamperDetail() {
   }
 
   async function handleDeleteEvent(eventId) {
-    await api.deleteEvent(id, eventId);
-    setEvents(prev => prev.filter(e => e.id !== eventId));
+    try {
+      await api.deleteEvent(id, eventId);
+      setEvents(prev => prev.filter(e => e.id !== eventId));
+    } catch (err) { alert(err.message); }
   }
 
   async function handleSaveSettings() {
@@ -459,7 +465,8 @@ export default function CamperDetail() {
         icr: dsIcr || null, isf: dsIsf || null, target_bg: dsTarget || null,
         closed_loop: dsClosedLoop, long_acting_am: dsLaAm || null, long_acting_bed: dsLaBed || null,
       });
-    } finally { setSavingSettings(false); }
+    } catch (err) { alert(err.message); }
+    finally { setSavingSettings(false); }
   }
 
   function shiftSettingsDate(days) {
@@ -532,39 +539,44 @@ export default function CamperDetail() {
               <RefreshCw size={15} className={syncing ? 'animate-spin' : ''} />
               <span className="hidden sm:inline">{syncing ? 'Syncing...' : 'Sync'}</span>
             </button>
-            <button
-              onClick={async () => {
-                const today = new Date();
-                const day = today.getDay();
-                const diffToSat = day >= 6 ? 0 : day + 1;
-                today.setDate(today.getDate() - diffToSat);
-                const weekStart = today.toISOString().slice(0, 10);
-                setExporting(true);
-                try { await api.downloadFlowsheet(id, weekStart); }
-                finally { setExporting(false); }
-              }}
-              disabled={exporting}
-              className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800 hover:bg-white/60 disabled:opacity-40 transition-colors py-2 px-2 rounded-lg"
-              title="Download flowsheet CSV"
-            >
-              <Download size={15} />
-              <span className="hidden sm:inline">{exporting ? 'Exporting…' : 'Export CSV'}</span>
-            </button>
-            <button
-              onClick={() => {
-                const today = new Date();
-                const day = today.getDay();
-                const diffToSat = day >= 6 ? 0 : day + 1;
-                today.setDate(today.getDate() - diffToSat);
-                const weekStart = today.toISOString().slice(0, 10);
-                window.open(`/campers/${id}/print-flowsheet?week_start=${weekStart}`, '_blank');
-              }}
-              className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800 hover:bg-white/60 transition-colors py-2 px-2 rounded-lg"
-              title="Print weekly flowsheet"
-            >
-              <Printer size={15} />
-              <span className="hidden sm:inline">Print</span>
-            </button>
+            {isMedStaff && (
+              <>
+                <button
+                  onClick={async () => {
+                    const today = new Date();
+                    const day = today.getDay();
+                    const diffToSat = day >= 6 ? 0 : day + 1;
+                    today.setDate(today.getDate() - diffToSat);
+                    const weekStart = today.toISOString().slice(0, 10);
+                    setExporting(true);
+                    try { await api.downloadFlowsheet(id, weekStart); }
+                    catch (err) { alert(err.message); }
+                    finally { setExporting(false); }
+                  }}
+                  disabled={exporting}
+                  className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800 hover:bg-white/60 disabled:opacity-40 transition-colors py-2 px-2 rounded-lg"
+                  title="Download flowsheet CSV"
+                >
+                  <Download size={15} />
+                  <span className="hidden sm:inline">{exporting ? 'Exporting…' : 'Export CSV'}</span>
+                </button>
+                <button
+                  onClick={() => {
+                    const today = new Date();
+                    const day = today.getDay();
+                    const diffToSat = day >= 6 ? 0 : day + 1;
+                    today.setDate(today.getDate() - diffToSat);
+                    const weekStart = today.toISOString().slice(0, 10);
+                    window.open(`/campers/${id}/print-flowsheet?week_start=${weekStart}`, '_blank');
+                  }}
+                  className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800 hover:bg-white/60 transition-colors py-2 px-2 rounded-lg"
+                  title="Print weekly flowsheet"
+                >
+                  <Printer size={15} />
+                  <span className="hidden sm:inline">Print</span>
+                </button>
+              </>
+            )}
           </div>
         </div>
         <div className="mt-4">
@@ -609,43 +621,47 @@ export default function CamperDetail() {
         <div className="grid grid-cols-3 gap-2 mb-2">
           <div>
             <label className="text-xs text-slate-500 block">ICR</label>
-            <input type="number" step="0.1" value={dsIcr} onChange={e => setDsIcr(e.target.value)}
-              className="w-full border border-slate-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-pine-400 focus:border-pine-400 transition-colors" />
+            <input type="number" step="0.1" value={dsIcr} onChange={e => setDsIcr(e.target.value)} disabled={!isMedStaff}
+              className="w-full border border-slate-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-pine-400 focus:border-pine-400 transition-colors disabled:bg-slate-50 disabled:text-slate-500" />
           </div>
           <div>
             <label className="text-xs text-slate-500 block">ISF</label>
-            <input type="number" step="1" value={dsIsf} onChange={e => setDsIsf(e.target.value)}
-              className="w-full border border-slate-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-pine-400 focus:border-pine-400 transition-colors" />
+            <input type="number" step="1" value={dsIsf} onChange={e => setDsIsf(e.target.value)} disabled={!isMedStaff}
+              className="w-full border border-slate-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-pine-400 focus:border-pine-400 transition-colors disabled:bg-slate-50 disabled:text-slate-500" />
           </div>
           <div>
             <label className="text-xs text-slate-500 block">Target BG</label>
-            <input type="number" step="5" value={dsTarget} onChange={e => setDsTarget(e.target.value)}
-              className="w-full border border-slate-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-pine-400 focus:border-pine-400 transition-colors" />
+            <input type="number" step="5" value={dsTarget} onChange={e => setDsTarget(e.target.value)} disabled={!isMedStaff}
+              className="w-full border border-slate-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-pine-400 focus:border-pine-400 transition-colors disabled:bg-slate-50 disabled:text-slate-500" />
           </div>
         </div>
         {isPump ? (
           <label className="flex items-center gap-2 text-sm text-slate-600 mb-2">
-            <input type="checkbox" checked={dsClosedLoop} onChange={e => setDsClosedLoop(e.target.checked)}
+            <input type="checkbox" checked={dsClosedLoop} onChange={e => setDsClosedLoop(e.target.checked)} disabled={!isMedStaff}
               className="rounded border-slate-300" /> Closed Loop
           </label>
         ) : (
           <div className="grid grid-cols-2 gap-2 mb-2">
             <div>
               <label className="text-xs text-slate-500 block">Long Acting AM</label>
-              <input type="number" step="0.5" value={dsLaAm} onChange={e => setDsLaAm(e.target.value)}
-                className="w-full border border-slate-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-pine-400 focus:border-pine-400 transition-colors" />
+              <input type="number" step="0.5" value={dsLaAm} onChange={e => setDsLaAm(e.target.value)} disabled={!isMedStaff}
+                className="w-full border border-slate-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-pine-400 focus:border-pine-400 transition-colors disabled:bg-slate-50 disabled:text-slate-500" />
             </div>
             <div>
               <label className="text-xs text-slate-500 block">Long Acting BED</label>
-              <input type="number" step="0.5" value={dsLaBed} onChange={e => setDsLaBed(e.target.value)}
-                className="w-full border border-slate-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-pine-400 focus:border-pine-400 transition-colors" />
+              <input type="number" step="0.5" value={dsLaBed} onChange={e => setDsLaBed(e.target.value)} disabled={!isMedStaff}
+                className="w-full border border-slate-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-pine-400 focus:border-pine-400 transition-colors disabled:bg-slate-50 disabled:text-slate-500" />
             </div>
           </div>
         )}
-        <button onClick={handleSaveSettings} disabled={savingSettings}
-          className="w-full py-2 rounded-lg text-sm font-medium bg-slate-800 text-white hover:bg-slate-700 disabled:opacity-40 transition-colors">
-          {savingSettings ? 'Saving...' : 'Save Settings'}
-        </button>
+        {isMedStaff ? (
+          <button onClick={handleSaveSettings} disabled={savingSettings}
+            className="w-full py-2 rounded-lg text-sm font-medium bg-slate-800 text-white hover:bg-slate-700 disabled:opacity-40 transition-colors">
+            {savingSettings ? 'Saving...' : 'Save Settings'}
+          </button>
+        ) : (
+          <p className="text-xs text-slate-400 text-center pt-1">Settings are managed by med staff</p>
+        )}
       </div>
 
       {/* CGM Clinical Summary */}
