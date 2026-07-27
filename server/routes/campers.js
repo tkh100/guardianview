@@ -188,8 +188,9 @@ router.delete('/:id', ...requireRole('admin', 'nurse'), (req, res) => {
 
 // POST /api/campers/:id/connect — save CGM credentials and test
 router.post('/:id/connect', ...requireRole('admin', 'nurse'), async (req, res) => {
-  const { cgm_provider, cgm_auth_mode, cgm_username, cgm_password, cgm_url } = req.body;
+  const { cgm_provider, cgm_auth_mode, cgm_username, cgm_password, cgm_url, cgm_region } = req.body;
   const id = req.params.id;
+  const region = cgm_region || 'us';
 
   try {
     // Test connection before saving; capture session where possible to avoid re-auth on first sync
@@ -197,14 +198,14 @@ router.post('/:id/connect', ...requireRole('admin', 'nurse'), async (req, res) =
     switch (cgm_provider) {
       case 'dexcom':
         if (cgm_auth_mode === 'follower') {
-          // Follower uses camp credentials from env — just verify env is set
-          if (!process.env.DEXCOM_FOLLOWER_USERNAME) {
-            return res.status(400).json({ error: 'Follower credentials not configured on server. Add DEXCOM_FOLLOWER_USERNAME and DEXCOM_FOLLOWER_PASSWORD to env.' });
-          }
-        } else {
-          // Save the session so the sync engine doesn't need to login again
-          sessionId = await dexcom.loginPublisher(cgm_username, cgm_password);
+          // Rejected at connect time so a camp can't configure a camper into a
+          // mode that cannot distinguish them from other followed campers.
+          return res.status(400).json({
+            error: "Dexcom Follow mode is not supported. Connect the camper in Direct mode with their own Dexcom account, or use Nightscout.",
+          });
         }
+        // Save the session so the sync engine doesn't need to login again
+        sessionId = await dexcom.loginPublisher(cgm_username, cgm_password, region);
         break;
       case 'nightscout':
         await nightscout.testConnection(cgm_url, cgm_password);
@@ -217,13 +218,13 @@ router.post('/:id/connect', ...requireRole('admin', 'nurse'), async (req, res) =
     }
 
     // Save credentials and the session ID captured above
-    const enc = cgm_auth_mode === 'follower' ? null : encrypt(cgm_password);
+    const enc = encrypt(cgm_password);
     db.prepare(`
       UPDATE campers SET
         cgm_provider=?, cgm_auth_mode=?, cgm_username=?,
-        cgm_password_enc=?, cgm_url=?, cgm_session_id=?, sync_error=NULL
+        cgm_password_enc=?, cgm_url=?, cgm_session_id=?, cgm_region=?, sync_error=NULL
       WHERE id=?
-    `).run(cgm_provider, cgm_auth_mode || 'publisher', cgm_username || null, enc, cgm_url || null, sessionId, id);
+    `).run(cgm_provider, 'publisher', cgm_username || null, enc, cgm_url || null, sessionId, region, id);
 
     res.json({ ok: true, message: 'Connection verified and saved' });
   } catch (err) {

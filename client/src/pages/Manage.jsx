@@ -2,8 +2,16 @@ import { useState, useEffect } from 'react';
 import { UserPlus, Wifi, WifiOff, Pencil, Trash2, RefreshCw, ChevronDown, ChevronUp, Users } from 'lucide-react';
 import { api } from '../api';
 
-const PROVIDERS = ['dexcom', 'nightscout', 'libre'];
-const AUTH_MODES = { dexcom: ['publisher', 'follower'], nightscout: ['publisher'], libre: ['publisher'] };
+// Libre is intentionally omitted: the server's LibreLinkUp client dependency
+// isn't installed, so selecting it could only ever fail at connect time.
+const PROVIDERS = ['dexcom', 'nightscout'];
+
+// Dexcom runs separate regional servers that don't share accounts.
+const DEXCOM_REGIONS = [
+  { value: 'us', label: 'United States' },
+  { value: 'ous', label: 'Outside US' },
+  { value: 'jp', label: 'Japan' },
+];
 
 const CABIN_GROUPS = [
   ...Array.from({ length: 10 }, (_, i) => `${(i + 1) * 2}B`),   // 2B, 4B … 20B
@@ -28,7 +36,7 @@ const EMPTY_FORM = {
   reg_pump_supplies_received: false, pump_site_count: '', pump_reservoir_count: '',
   reg_sensor_count: '', reg_half_unit_syringes: false,
   // CGM
-  cgm_provider: 'dexcom', cgm_auth_mode: 'publisher', cgm_username: '', cgm_password: '', cgm_url: '',
+  cgm_provider: 'dexcom', cgm_region: 'us', cgm_username: '', cgm_password: '', cgm_url: '',
 };
 
 function Section({ title, open, onToggle, children }) {
@@ -73,7 +81,7 @@ function AddCamperForm({ onAdd }) {
 
   const set = (key, val) => setForm(f => ({ ...f, [key]: val }));
   const toggle = (s) => setSections(prev => ({ ...prev, [s]: !prev[s] }));
-  const hasCgm = form.cgm_auth_mode === 'follower' || form.cgm_username || form.cgm_password || form.cgm_url;
+  const hasCgm = form.cgm_username || form.cgm_password || form.cgm_url;
   const isPump = form.delivery_method === 'pump';
 
   async function submit(e) {
@@ -85,7 +93,7 @@ function AddCamperForm({ onAdd }) {
       if (hasCgm) {
         setStatus('Verifying CGM connection...');
         await api.connectCGM(camper.id, {
-          cgm_provider: form.cgm_provider, cgm_auth_mode: form.cgm_auth_mode,
+          cgm_provider: form.cgm_provider, cgm_region: form.cgm_region,
           cgm_username: form.cgm_username, cgm_password: form.cgm_password, cgm_url: form.cgm_url,
         });
         const updated = await api.getCampers('all');
@@ -239,11 +247,10 @@ function AddCamperForm({ onAdd }) {
           </div>
           {form.cgm_provider === 'dexcom' && (
             <div>
-              <label className="block text-xs text-slate-500 mb-1">Access Mode</label>
-              <select value={form.cgm_auth_mode} onChange={e => set('cgm_auth_mode', e.target.value)}
+              <label className="block text-xs text-slate-500 mb-1">Dexcom Region</label>
+              <select value={form.cgm_region} onChange={e => set('cgm_region', e.target.value)}
                 className="w-full border border-slate-200 rounded-lg px-2 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-pine-400 focus:border-pine-400 transition-colors">
-                <option value="publisher">Direct (camper's account)</option>
-                <option value="follower">Follow (camp follows camper)</option>
+                {DEXCOM_REGIONS.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
               </select>
             </div>
           )}
@@ -252,24 +259,14 @@ function AddCamperForm({ onAdd }) {
               <Input label="Nightscout URL" value={form.cgm_url} onChange={e => set('cgm_url', e.target.value)} placeholder="https://yourcamper.ns.10be.de" />
             </div>
           )}
-          {form.cgm_auth_mode === 'follower' ? (
-            <div className="col-span-2">
-              <p className="text-xs text-slate-500 bg-pine-50 border border-pine-200 rounded-lg px-3 py-2">
-                Follower mode uses the camp's Dexcom follower account configured in server env vars.
-              </p>
-            </div>
-          ) : (
-            <>
-              {form.cgm_provider !== 'nightscout' && (
-                <Input label="Username / Email" value={form.cgm_username} onChange={e => set('cgm_username', e.target.value)} autoComplete="off" />
-              )}
-              <div>
-                <label className="block text-xs text-slate-500 mb-1">{form.cgm_provider === 'nightscout' ? 'API Secret' : 'Password'}</label>
-                <input type="password" value={form.cgm_password} onChange={e => set('cgm_password', e.target.value)} autoComplete="new-password"
-                  className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-pine-400 focus:border-pine-400 transition-colors" />
-              </div>
-            </>
+          {form.cgm_provider !== 'nightscout' && (
+            <Input label="Username / Email" value={form.cgm_username} onChange={e => set('cgm_username', e.target.value)} autoComplete="off" />
           )}
+          <div>
+            <label className="block text-xs text-slate-500 mb-1">{form.cgm_provider === 'nightscout' ? 'API Secret' : 'Password'}</label>
+            <input type="password" value={form.cgm_password} onChange={e => set('cgm_password', e.target.value)} autoComplete="new-password"
+              className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-pine-400 focus:border-pine-400 transition-colors" />
+          </div>
         </div>
       </div>
 
@@ -283,7 +280,7 @@ function AddCamperForm({ onAdd }) {
 
 function ConnectCGMForm({ camper, onConnect, onClose }) {
   const [form, setForm] = useState({
-    cgm_provider: 'dexcom', cgm_auth_mode: 'publisher', cgm_username: '', cgm_password: '', cgm_url: '',
+    cgm_provider: 'dexcom', cgm_region: 'us', cgm_username: '', cgm_password: '', cgm_url: '',
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -309,44 +306,44 @@ function ConnectCGMForm({ camper, onConnect, onClose }) {
         <div>
           <label className="block text-xs text-slate-500 mb-1">CGM Device</label>
           <select value={form.cgm_provider}
-            onChange={e => setForm(f => ({ ...f, cgm_provider: e.target.value, cgm_auth_mode: 'publisher' }))}
+            onChange={e => setForm(f => ({ ...f, cgm_provider: e.target.value }))}
             className="w-full border border-slate-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-pine-400 focus:border-pine-400 transition-colors">
             {PROVIDERS.map(p => <option key={p} value={p}>{p.charAt(0).toUpperCase() + p.slice(1)}</option>)}
           </select>
         </div>
         {form.cgm_provider === 'dexcom' && (
           <div>
-            <label className="block text-xs text-slate-500 mb-1">Access Mode</label>
-            <select value={form.cgm_auth_mode}
-              onChange={e => setForm(f => ({ ...f, cgm_auth_mode: e.target.value }))}
+            <label className="block text-xs text-slate-500 mb-1">Dexcom Region</label>
+            <select value={form.cgm_region}
+              onChange={e => setForm(f => ({ ...f, cgm_region: e.target.value }))}
               className="w-full border border-slate-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-pine-400 focus:border-pine-400 transition-colors">
-              <option value="publisher">Direct (camper's account)</option>
-              <option value="follower">Follow (camp follows camper)</option>
+              {DEXCOM_REGIONS.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
             </select>
           </div>
         )}
       </div>
-      {form.cgm_auth_mode !== 'follower' && (
-        <div className="grid grid-cols-2 gap-3 mb-3">
-          {form.cgm_provider !== 'nightscout' && (
-            <div>
-              <label className="block text-xs text-slate-500 mb-1">Username / Email</label>
-              <input value={form.cgm_username} onChange={e => setForm(f => ({ ...f, cgm_username: e.target.value }))} autoComplete="off"
-                className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-pine-400 focus:border-pine-400 transition-colors" />
-            </div>
-          )}
-          <div>
-            <label className="block text-xs text-slate-500 mb-1">{form.cgm_provider === 'nightscout' ? 'API Secret' : 'Password'}</label>
-            <input type="password" value={form.cgm_password} onChange={e => setForm(f => ({ ...f, cgm_password: e.target.value }))} autoComplete="new-password"
-              className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-pine-400 focus:border-pine-400 transition-colors" />
-          </div>
+      {form.cgm_provider === 'nightscout' && (
+        <div className="mb-3">
+          <label className="block text-xs text-slate-500 mb-1">Nightscout URL</label>
+          <input value={form.cgm_url} onChange={e => setForm(f => ({ ...f, cgm_url: e.target.value }))}
+            placeholder="https://yourcamper.ns.10be.de"
+            className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-pine-400 focus:border-pine-400 transition-colors" />
         </div>
       )}
-      {form.cgm_auth_mode === 'follower' && (
-        <p className="text-xs text-slate-500 mb-3 bg-pine-50 border border-pine-200 rounded-lg px-3 py-2">
-          Follower mode uses the camp's Dexcom follower account (configured in server env vars).
-        </p>
-      )}
+      <div className="grid grid-cols-2 gap-3 mb-3">
+        {form.cgm_provider !== 'nightscout' && (
+          <div>
+            <label className="block text-xs text-slate-500 mb-1">Username / Email</label>
+            <input value={form.cgm_username} onChange={e => setForm(f => ({ ...f, cgm_username: e.target.value }))} autoComplete="off"
+              className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-pine-400 focus:border-pine-400 transition-colors" />
+          </div>
+        )}
+        <div>
+          <label className="block text-xs text-slate-500 mb-1">{form.cgm_provider === 'nightscout' ? 'API Secret' : 'Password'}</label>
+          <input type="password" value={form.cgm_password} onChange={e => setForm(f => ({ ...f, cgm_password: e.target.value }))} autoComplete="new-password"
+            className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-pine-400 focus:border-pine-400 transition-colors" />
+        </div>
+      </div>
       <div className="flex gap-2">
         <button type="submit" disabled={loading}
           className="bg-pine-500 hover:bg-pine-400 disabled:opacity-50 text-white text-xs font-medium px-4 py-2 rounded-lg transition-colors">

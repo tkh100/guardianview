@@ -173,4 +173,9 @@ migrate('ALTER TABLE camper_events ADD COLUMN basal_rate REAL');
 // app_users — medical access flag
 migrate('ALTER TABLE app_users ADD COLUMN medical_access INTEGER DEFAULT 0');
 
+// campers — Dexcom Share region. Dexcom runs separate, non-interchangeable
+// servers per region; an account created in one region cannot authenticate
+// against another. 'us' | 'ous' (outside US) | 'jp'.
+migrate("ALTER TABLE campers ADD COLUMN cgm_region TEXT DEFAULT 'us'");
+
 module.exports = db;

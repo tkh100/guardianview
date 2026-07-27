@@ -13,20 +13,6 @@ const BATCH_DELAY_MS = 500;
 const SYNC_INTERVAL_MS = 60_000;
 const NO_DATA_ALERT_MINUTES = 15;
 
-// Follower session cache (shared across all follower-mode campers)
-// Only re-auth on actual SessionExpiredError — no arbitrary timer
-let followerSession = null;
-
-async function getFollowerSession() {
-  if (followerSession) return followerSession;
-  const { DEXCOM_FOLLOWER_USERNAME, DEXCOM_FOLLOWER_PASSWORD } = process.env;
-  if (!DEXCOM_FOLLOWER_USERNAME || !DEXCOM_FOLLOWER_PASSWORD) {
-    throw new Error('Follower credentials not configured in env');
-  }
-  followerSession = await dexcom.loginFollower(DEXCOM_FOLLOWER_USERNAME, DEXCOM_FOLLOWER_PASSWORD);
-  return followerSession;
-}
-
 async function syncCamper(camper) {
   let readings = [];
 
@@ -34,23 +20,20 @@ async function syncCamper(camper) {
     switch (camper.cgm_provider) {
       case 'dexcom': {
         if (camper.cgm_auth_mode === 'follower') {
-          const session = await getFollowerSession();
-          try {
-            readings = await dexcom.getFollowerReadings(session);
-          } catch (e) {
-            if (e.name === 'SessionExpiredError') followerSession = null;
-            throw e;
-          }
+          // Not supported — see providers/dexcom.js. Throws a clear message
+          // rather than silently serving one camper's readings for another.
+          readings = await dexcom.getFollowerReadings();
         } else {
           // Publisher mode — authenticate once, re-auth only on SessionExpiredError
+          const region = camper.cgm_region || 'us';
           let sessionId = camper.cgm_session_id;
           if (!sessionId) {
             const password = decrypt(camper.cgm_password_enc);
-            sessionId = await dexcom.loginPublisher(camper.cgm_username, password);
+            sessionId = await dexcom.loginPublisher(camper.cgm_username, password, region);
             db.prepare('UPDATE campers SET cgm_session_id=? WHERE id=?').run(sessionId, camper.id);
           }
           try {
-            readings = await dexcom.getPublisherReadings(sessionId);
+            readings = await dexcom.getPublisherReadings(sessionId, region);
           } catch (e) {
             if (e.name === 'SessionExpiredError') {
               // Session rejected by Dexcom — clear and re-auth next cycle

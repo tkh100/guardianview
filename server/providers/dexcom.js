@@ -1,14 +1,32 @@
 /**
  * Dexcom Share API client
- * Two-step auth flow per nightscout-clock implementation:
+ * Two-step auth flow:
  * 1. AuthenticatePublisherAccount  → accountId
  * 2. LoginPublisherAccountById     → sessionId
  * 3. ReadPublisherLatestGlucoseValues → readings
+ *
+ * Dexcom operates separate regional servers that do NOT share accounts — an
+ * account registered in the US cannot authenticate against the OUS server and
+ * vice versa. Japan additionally uses a different application ID.
+ * Region constants match pydexcom / nightscout-clock.
  */
 const fetch = require('node-fetch');
 
-const BASE_URL = 'https://share2.dexcom.com/ShareWebServices/Services';
-const APPLICATION_ID = 'd89443d2-327c-4a6f-89e5-496bbb0317db';
+const REGIONS = {
+  us:  { host: 'share2.dexcom.com',    applicationId: 'd89443d2-327c-4a6f-89e5-496bbb0317db' },
+  ous: { host: 'shareous1.dexcom.com', applicationId: 'd89443d2-327c-4a6f-89e5-496bbb0317db' },
+  jp:  { host: 'share.dexcom.jp',      applicationId: 'd8665ade-9673-4e27-9ff6-92db4ce13d13' },
+};
+const DEFAULT_REGION = 'us';
+
+function resolveRegion(region) {
+  return REGIONS[String(region || DEFAULT_REGION).toLowerCase()] || REGIONS[DEFAULT_REGION];
+}
+
+function baseUrl(region) {
+  return `https://${resolveRegion(region).host}/ShareWebServices/Services`;
+}
+
 const HEADERS = {
   'Content-Type': 'application/json',
   'Accept': 'application/json',
@@ -31,13 +49,13 @@ const TREND_MAP = {
 /**
  * Step 1: username + password → accountId
  */
-async function getAccountId(username, password) {
+async function getAccountId(username, password, region) {
   const res = await fetch(
-    `${BASE_URL}/General/AuthenticatePublisherAccount`,
+    `${baseUrl(region)}/General/AuthenticatePublisherAccount`,
     {
       method: 'POST',
       headers: HEADERS,
-      body: JSON.stringify({ accountName: username, password, applicationId: APPLICATION_ID }),
+      body: JSON.stringify({ accountName: username, password, applicationId: resolveRegion(region).applicationId }),
     }
   );
   const text = await res.text();
@@ -54,13 +72,13 @@ async function getAccountId(username, password) {
 /**
  * Step 2: accountId + password → sessionId
  */
-async function getSessionId(accountId, password) {
+async function getSessionId(accountId, password, region) {
   const res = await fetch(
-    `${BASE_URL}/General/LoginPublisherAccountById`,
+    `${baseUrl(region)}/General/LoginPublisherAccountById`,
     {
       method: 'POST',
       headers: HEADERS,
-      body: JSON.stringify({ accountId, password, applicationId: APPLICATION_ID }),
+      body: JSON.stringify({ accountId, password, applicationId: resolveRegion(region).applicationId }),
     }
   );
   const text = await res.text();
@@ -76,23 +94,16 @@ async function getSessionId(accountId, password) {
 /**
  * Full publisher login: username + password → sessionId
  */
-async function loginPublisher(username, password) {
-  const accountId = await getAccountId(username, password);
-  return getSessionId(accountId, password);
-}
-
-/**
- * Follower login uses same two-step flow with camp follower account
- */
-async function loginFollower(username, password) {
-  return loginPublisher(username, password);
+async function loginPublisher(username, password, region) {
+  const accountId = await getAccountId(username, password, region);
+  return getSessionId(accountId, password, region);
 }
 
 /**
  * Fetch latest glucose readings for a publisher session
  */
-async function getPublisherReadings(sessionId, minutes = 180, maxCount = 36) {
-  const url = new URL(`${BASE_URL}/Publisher/ReadPublisherLatestGlucoseValues`);
+async function getPublisherReadings(sessionId, region, minutes = 180, maxCount = 36) {
+  const url = new URL(`${baseUrl(region)}/Publisher/ReadPublisherLatestGlucoseValues`);
   url.searchParams.set('sessionId', sessionId);
   url.searchParams.set('minutes', minutes);
   url.searchParams.set('maxCount', maxCount);
@@ -111,25 +122,31 @@ async function getPublisherReadings(sessionId, minutes = 180, maxCount = 36) {
 }
 
 /**
- * Fetch latest glucose readings for a follower session
+ * Follower mode is NOT functional and is intentionally disabled.
+ *
+ * The previous implementation called Follower/ReadFollowerLatestGlucoseValues
+ * with only a sessionId. Two problems:
+ *
+ *  1. That endpoint is not part of the documented Dexcom Share API. The
+ *     follower/subscriber surface is under Subscriber/ (e.g. ReadEvents), and
+ *     mature clients such as pydexcom implement publisher mode only.
+ *  2. More seriously, it passed no per-camper identifier. A camp follower
+ *     account follows many campers, so every follower-mode camper was issued
+ *     the exact same request and would have received the exact same readings —
+ *     one camper's glucose silently attributed to all of them.
+ *
+ * Returning wrong-but-plausible glucose values for a child is far more
+ * dangerous than returning none, so this fails loudly instead. Implementing
+ * follower mode correctly requires enumerating the account's subscriptions and
+ * mapping each camper to their subscription/publisher id, then verifying it
+ * against a real Dexcom follower account.
  */
-async function getFollowerReadings(sessionId, minutes = 180, maxCount = 36) {
-  const url = new URL(`${BASE_URL}/Follower/ReadFollowerLatestGlucoseValues`);
-  url.searchParams.set('sessionId', sessionId);
-  url.searchParams.set('minutes', minutes);
-  url.searchParams.set('maxCount', maxCount);
-
-  const res = await fetch(url.toString(), { headers: HEADERS });
-
-  if (res.status === 500) {
-    const text = await res.text();
-    if (text.includes('Session')) throw new SessionExpiredError('Dexcom follower session expired');
-    throw new Error(`Dexcom follower readings 500: ${text}`);
-  }
-  if (!res.ok) throw new Error(`Dexcom follower readings failed (${res.status})`);
-
-  const data = await res.json();
-  return normalizeReadings(data);
+async function getFollowerReadings() {
+  throw new Error(
+    'Dexcom Follow mode is not supported. Connect this camper in Direct mode ' +
+    "using their own Dexcom account, or use Nightscout. (Follow mode couldn't " +
+    "tell campers apart and risked showing one camper's readings for another.)"
+  );
 }
 
 function normalizeReadings(raw) {
@@ -160,8 +177,10 @@ class SessionExpiredError extends Error {
 
 module.exports = {
   loginPublisher,
-  loginFollower,
   getPublisherReadings,
   getFollowerReadings,
   SessionExpiredError,
+  REGIONS,
+  resolveRegion,
+  baseUrl,
 };

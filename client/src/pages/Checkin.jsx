@@ -55,7 +55,7 @@ export default function Checkin() {
 
   // Step 4: CGM Connection
   const [cgmProvider, setCgmProvider] = useState('dexcom');
-  const [cgmAuthMode, setCgmAuthMode] = useState('publisher');
+  const [cgmRegion, setCgmRegion] = useState('us');
   const [cgmUsername, setCgmUsername] = useState('');
   const [cgmPassword, setCgmPassword] = useState('');
   const [cgmUrl, setCgmUrl] = useState('');
@@ -108,7 +108,7 @@ export default function Checkin() {
     try {
       await api.connectCGM(camperId, {
         cgm_provider: cgmProvider,
-        cgm_auth_mode: cgmAuthMode,
+        cgm_region: cgmRegion,
         cgm_username: cgmUsername || null,
         cgm_password: cgmPassword || null,
         cgm_url: cgmUrl || null,
@@ -128,7 +128,7 @@ export default function Checkin() {
     setS1({ name: '', cabin_group: '', age: '', delivery_method: 'pump', target_low: 70, target_high: 180, carb_ratio: '' });
     setS2({ allergies: '', a1c: '', weight: '', long_acting_type: '', short_acting_type: '', cgm_pin: '', med_breakfast: '', med_lunch: '', med_dinner: '', med_bed: '', med_emergency: '', profile_notes: '' });
     setS3({ reg_recent_illness: '', reg_open_wounds: '', reg_scar_tissue: '', reg_lice: '', reg_meds_received: false, reg_cgm_supplies_received: false, pump_pin: '', closed_loop: false, reg_pump_supplies_received: false, pump_site_count: '', pump_reservoir_count: '', home_long_acting_am: '', home_long_acting_bed: '', reg_sensor_count: '', reg_half_unit_syringes: false });
-    setCgmProvider('dexcom'); setCgmAuthMode('publisher'); setCgmUsername(''); setCgmPassword(''); setCgmUrl('');
+    setCgmProvider('dexcom'); setCgmRegion('us'); setCgmUsername(''); setCgmPassword(''); setCgmUrl('');
   }
 
   if (done) {
@@ -377,7 +377,7 @@ export default function Checkin() {
           <div>
             <label className={labelCls}>CGM Provider</label>
             <div className="flex gap-2">
-              {['dexcom', 'nightscout', 'libre'].map(p => (
+              {['dexcom', 'nightscout'].map(p => (
                 <button key={p} type="button" onClick={() => setCgmProvider(p)}
                   className={`flex-1 py-2 rounded-lg text-sm font-medium border transition-colors capitalize ${cgmProvider === p ? 'bg-pine-500 text-white border-pine-500' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'}`}>
                   {p === 'nightscout' ? 'Nightscout' : p.charAt(0).toUpperCase() + p.slice(1)}
@@ -388,23 +388,23 @@ export default function Checkin() {
 
           {cgmProvider === 'dexcom' && (
             <div>
-              <label className={labelCls}>Auth Mode</label>
+              <label className={labelCls}>Dexcom Region</label>
               <div className="flex gap-2">
-                {['publisher', 'follower'].map(m => (
-                  <button key={m} type="button" onClick={() => setCgmAuthMode(m)}
-                    className={`flex-1 py-2 rounded-lg text-sm font-medium border transition-colors capitalize ${cgmAuthMode === m ? 'bg-pine-500 text-white border-pine-500' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'}`}>
-                    {m}
+                {[['us', 'United States'], ['ous', 'Outside US'], ['jp', 'Japan']].map(([value, label]) => (
+                  <button key={value} type="button" onClick={() => setCgmRegion(value)}
+                    className={`flex-1 py-2 rounded-lg text-sm font-medium border transition-colors ${cgmRegion === value ? 'bg-pine-500 text-white border-pine-500' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'}`}>
+                    {label}
                   </button>
                 ))}
               </div>
             </div>
           )}
 
-          {cgmProvider !== 'nightscout' && cgmAuthMode !== 'follower' && (
+          {cgmProvider !== 'nightscout' && (
             <div>
               <label className={labelCls}>Username / Email</label>
               <input type="text" value={cgmUsername} onChange={e => setCgmUsername(e.target.value)}
-                placeholder={cgmProvider === 'dexcom' ? 'Dexcom username' : 'LibreLinkUp email'} className={inputCls}
+                placeholder="Dexcom username" className={inputCls}
                 autoComplete="off" />
             </div>
           )}
@@ -422,16 +422,12 @@ export default function Checkin() {
                   placeholder="API secret" className={inputCls} autoComplete="new-password" />
               </div>
             </>
-          ) : cgmAuthMode !== 'follower' ? (
+          ) : (
             <div>
               <label className={labelCls}>Password</label>
               <input type="password" value={cgmPassword} onChange={e => setCgmPassword(e.target.value)}
                 placeholder="Password" className={inputCls} autoComplete="new-password" />
             </div>
-          ) : (
-            <p className="text-sm text-slate-500 bg-slate-50 rounded-lg px-3 py-2 border border-slate-200">
-              Follower mode uses camp credentials configured on the server.
-            </p>
           )}
 
           <div className="flex gap-2 mt-2">
